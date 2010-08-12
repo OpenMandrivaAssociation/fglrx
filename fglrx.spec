@@ -86,7 +86,7 @@
 %endif
 
 %if %{mdkversion} <= 201000
-%define ldetect_cards_name      ATI Radeon HD 2000 and later (radeonhd/fglrx)
+%define ldetect_cards_name	ATI Radeon HD 2000 and later (radeonhd/fglrx)
 %endif
 
 %if %{mdkversion} <= 201000
