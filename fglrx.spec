@@ -185,6 +185,9 @@ Patch1:		ati-8.19.10-fglrx_gamma-extutil-include.patch
 Patch4:		fglrx_gamma-fix-underlinking.patch
 %endif
 Patch3:		fglrx-authfile-locations.patch
+# apply CVE-2010-3081 fix locally from kernel commit c41d68a5
+# while fixing build -Anssi 09/2010
+Patch5:		fglrx-cve-2010-3081.patch
 Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
@@ -342,6 +345,7 @@ cmp common/usr/X11R6/include/X11/extensions/fglrx_gamma.h fglrx_tools/lib/fglrx_
 %endif
 
 %patch3 -p1
+%patch5 -p1
 %patch9 -p1
 %patch10 -p1
 
