@@ -45,13 +45,13 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	10-9
+%define oversion	10-10pre
 # Advertised version, for description:
-%define mversion	10.9
+%define mversion	10.10 prerelease
 # driver version from ati-packager-helper.sh:
-%define iversion	8.771
+%define iversion	8.780
 # release:
-%define rel		3
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -62,9 +62,12 @@
 %define priority	1000
 %define release %mkrel %{rel}
 
+# set to 1 for a prerelease driver with an ubuntu tarball as source
+%define ubuntu_prerelease 1
+
 %define driverpkgname	x11-driver-video-fglrx
 %define drivername	fglrx
-%define xorg_version	750
+%define xorg_version	760
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
@@ -78,6 +81,7 @@
 %define ldetect_cards_name      %nil
 
 %if %{mdkversion} <= 201010 || %{atibuild}
+%define xorg_version    750
 # ATI cards not listed in main ldetect-lst pcitable are not likely
 # to be supported by radeon which is from the same time period.
 # radeonhd has greater chance of working due to it not using ID lists.
@@ -169,7 +173,11 @@ Name:		%{name}
 Version:	%{version}
 Release:	%{release}
 %if !%{atibuild}
+%if !%{ubuntu_prerelease}
 Source0:	https://a248.e.akamai.net/f/674/9206/0/www2.ati.com/drivers/linux/ati-driver-installer-%{oversion}-x86.x86_64.run
+%else
+Source0:        fglrx-installer_%{iversion}.orig.tar.gz
+%endif
 %endif
 Source1:	ati-packager.sh
 Source2:	atieventsd.init
@@ -185,9 +193,6 @@ Patch1:		ati-8.19.10-fglrx_gamma-extutil-include.patch
 Patch4:		fglrx_gamma-fix-underlinking.patch
 %endif
 Patch3:		fglrx-authfile-locations.patch
-# apply CVE-2010-3081 fix locally from kernel commit c41d68a5
-# while fixing build -Anssi 09/2010
-Patch5:		fglrx-cve-2010-3081.patch
 Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
@@ -248,6 +253,9 @@ Conflicts:	x11-server-common < 1.4.2-5
 %if %{mdkversion} >= 200910
 # many intermediate changes in alternatives scheme
 Conflicts:	x11-server-common < 1.6.0-11
+%endif
+%if %{mdkversion} >= 201100
+Requires:	x11-server-common >= 1.9
 %endif
 Provides:	atieventsd = %{version}-%{release}
 Obsoletes:	atieventsd < %{version}-%{release}
@@ -336,7 +344,12 @@ ln -s %{ati_dir}/%{xverdir} %{ati_dir}/arch .
 # patches affects common, so we cannot symlink it:
 cp -a %{ati_dir}/common .
 %else
+%if %ubuntu_prerelease
+%setup -q -T -D -a 0
+ln -s . common
+%else
 sh %{SOURCE0} --extract .
+%endif
 
 mkdir fglrx_tools
 tar -xzf common/usr/src/ati/fglrx_sample_source.tgz -C fglrx_tools
@@ -345,15 +358,20 @@ cd fglrx_tools # ensure patch does not touch outside
 %patch4 -p1
 cd -
 cmp common/usr/X11R6/include/X11/extensions/fglrx_gamma.h fglrx_tools/lib/fglrx_gamma/fglrx_gamma.h
+%if %ubuntu_prerelease
+[ -d "%xverdir" ] || (echo This driver version does not support your X.org server. Please wait for a new release from ATI. >&2; false)
+%else
 [ "%iversion" = "$(./ati-packager-helper.sh --version)" ]
 %endif
+%endif
 
-%patch3 -p1
-%patch5 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
+cd common # ensure patches do not touch outside
+%patch3 -p2
+%patch9 -p0
+%patch10 -p2
+%patch11 -p2
+%patch12 -p2
+cd ..
 
 cat > README.install.urpmi <<EOF
 This driver is for ATI Radeon HD 2000 and newer cards.
