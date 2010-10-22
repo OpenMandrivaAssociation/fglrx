@@ -45,11 +45,11 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	10-10pre
+%define oversion	10-10
 # Advertised version, for description:
-%define mversion	10.10 prerelease
+%define mversion	10.10
 # driver version from ati-packager-helper.sh:
-%define iversion	8.780
+%define iversion	8.783
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
@@ -63,7 +63,7 @@
 %define release %mkrel %{rel}
 
 # set to 1 for a prerelease driver with an ubuntu tarball as source
-%define ubuntu_prerelease 1
+%define ubuntu_prerelease 0
 
 %define driverpkgname	x11-driver-video-fglrx
 %define drivername	fglrx
@@ -367,7 +367,7 @@ cmp common/usr/X11R6/include/X11/extensions/fglrx_gamma.h fglrx_tools/lib/fglrx_
 
 cd common # ensure patches do not touch outside
 %patch3 -p2
-%patch9 -p0
+%patch9 -p2
 %patch10 -p2
 %patch11 -p2
 %patch12 -p2
