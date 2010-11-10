@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.783
 # release:
-%define rel		1
+%define rel		2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -255,7 +255,7 @@ Conflicts:	x11-server-common < 1.4.2-5
 Conflicts:	x11-server-common < 1.6.0-11
 %endif
 %if %{mdkversion} >= 201100
-Requires:	x11-server-common >= 1.9
+Requires:	x11-server-common >= 1.9 %(xserver-sdk-abi-requires videodrv)
 %endif
 Provides:	atieventsd = %{version}-%{release}
 Obsoletes:	atieventsd < %{version}-%{release}
