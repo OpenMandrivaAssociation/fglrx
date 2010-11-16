@@ -68,6 +68,8 @@
 %define driverpkgname	x11-driver-video-fglrx
 %define drivername	fglrx
 %define xorg_version	760
+# highest supported videodrv abi
+%define videodrv_abi	8
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
@@ -80,12 +82,16 @@
 # cooker ldetect-lst should be up-to-date
 %define ldetect_cards_name      %nil
 
-%if %{mdkversion} <= 201010 || %{atibuild}
-%define xorg_version    750
+%if %{atibuild}
 # ATI cards not listed in main ldetect-lst pcitable are not likely
 # to be supported by radeon which is from the same time period.
 # radeonhd has greater chance of working due to it not using ID lists.
 # (main pcitable entries override our entries)
+%define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
+%endif
+
+%if %{mdkversion} <= 201010
+%define xorg_version	750
 %define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
 %endif
 
@@ -255,7 +261,13 @@ Conflicts:	x11-server-common < 1.4.2-5
 Conflicts:	x11-server-common < 1.6.0-11
 %endif
 %if %{mdkversion} >= 201100
-Requires:	x11-server-common >= 1.9 %(xserver-sdk-abi-requires videodrv)
+Requires:	x11-server-common >= 1.9
+%if !%{atibuild}
+# Conflict with the next videodrv ABI break.
+# The driver may support multiple ABI versions and therefore
+# a strict version-specific requirement would not be enough.
+Conflicts:	xserver-abi(videodrv-%(echo $((%{videodrv_abi} + 1))))
+%endif
 %endif
 Provides:	atieventsd = %{version}-%{release}
 Obsoletes:	atieventsd < %{version}-%{release}
