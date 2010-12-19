@@ -207,7 +207,7 @@ Patch10:	fglrx-make_sh-no-proc-probe.patch
 Patch11:	fglrx-add-compatibility-with-2.6.36-kernels.patch
 Patch12:	fglrx-use-cflags_module-together-with-modflags.patch
 # 2.6.37 fix
-Patch13:	fglrx-2.6.27.patch
+Patch13:	fglrx-2.6.37.patch
 
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
