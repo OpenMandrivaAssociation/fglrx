@@ -90,7 +90,7 @@
 %define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
 %endif
 
-%if %{mdkversion} <= 201010
+%if %{mdkversion} <= 201020
 %define xorg_version	750
 %define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
 %endif
