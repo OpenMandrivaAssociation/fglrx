@@ -206,6 +206,8 @@ Patch10:	fglrx-make_sh-no-proc-probe.patch
 # fix for build with 2.6.36
 Patch11:	fglrx-add-compatibility-with-2.6.36-kernels.patch
 Patch12:	fglrx-use-cflags_module-together-with-modflags.patch
+# 2.6.37 fix
+Patch13:	fglrx-2.6.27.patch
 
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
@@ -383,6 +385,7 @@ cd common # ensure patches do not touch outside
 %patch10 -p2
 %patch11 -p2
 %patch12 -p2
+%patch13 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
