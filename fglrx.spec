@@ -45,13 +45,13 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	10-12
+%define oversion	11-1
 # Advertised version, for description:
-%define mversion	10.12
+%define mversion	11.1
 # driver version from ati-packager-helper.sh:
-%define iversion	8.801
+%define iversion	8.812
 # release:
-%define rel		3
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -203,11 +203,6 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-# fix for build with 2.6.36
-Patch11:	fglrx-add-compatibility-with-2.6.36-kernels.patch
-Patch12:	fglrx-use-cflags_module-together-with-modflags.patch
-# 2.6.37 fix
-Patch13:	fglrx-2.6.37.patch
 
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
@@ -383,9 +378,6 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
-%patch11 -p2
-%patch12 -p2
-%patch13 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
