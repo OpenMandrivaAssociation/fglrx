@@ -45,13 +45,13 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	11-2
+%define oversion	11-3
 # Advertised version, for description:
-%define mversion	11.2
+%define mversion	11.3
 # driver version from ati-packager-helper.sh:
-%define iversion	8.821
+%define iversion	8.831.2
 # release:
-%define rel		2
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -197,7 +197,7 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-
+Patch11:	fglrx-8.831.2-2.6.38-console.diff
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -357,10 +357,10 @@ sh %{SOURCE0} --extract .
 mkdir fglrx_tools
 tar -xzf common/usr/src/ati/fglrx_sample_source.tgz -C fglrx_tools
 cd fglrx_tools # ensure patch does not touch outside
-%patch1 -p1
-%patch4 -p1
+#%%patch1 -p1
+#%%patch4 -p1
 cd -
-cmp common/usr/X11R6/include/X11/extensions/fglrx_gamma.h fglrx_tools/lib/fglrx_gamma/fglrx_gamma.h
+#cmp common/usr/X11R6/include/X11/extensions/fglrx_gamma.h fglrx_tools/lib/fglrx_gamma/fglrx_gamma.h
 %if %ubuntu_prerelease
 [ -d "%xverdir" ] || (echo This driver version does not support your X.org server. Please wait for a new release from ATI. >&2; false)
 %else
@@ -373,6 +373,7 @@ cd common # ensure patches do not touch outside
 %patch9 -p2
 %patch10 -p2
 cd ..
+%patch11 -p0
 
 cat > README.install.urpmi <<EOF
 This driver is for ATI Radeon HD 2000 and newer cards.
@@ -448,19 +449,19 @@ EOF
 %build
 %if !%{atibuild}
 # %atibuild is done with minimal buildrequires
-cd fglrx_tools/lib/fglrx_gamma
-xmkmf
+#cd fglrx_tools/lib/fglrx_gamma
+#xmkmf
 # parallel make broken (2007-09-18)
-make CC="%__cc %optflags" SHLIBGLOBALSFLAGS="%{?ldflags} -L%{_prefix}/X11R6/%{_lib}"
-cd -
+#make CC="%__cc %optflags" SHLIBGLOBALSFLAGS="%{?ldflags} -L%{_prefix}/X11R6/%{_lib}"
+#cd -
 cd fglrx_tools/fgl_glxgears
 xmkmf
 %make RMAN=/bin/true CC="%__cc %optflags -I../../common/usr/include" EXTRA_LDOPTIONS="%{?ldflags}"
 cd -
-cd fglrx_tools/programs/fglrx_gamma
-xmkmf
-%make INSTALLED_LIBS=-L../../lib/fglrx_gamma INCLUDES=-I../../../common/usr/X11R6/include CC="%__cc %optflags" RMAN=/bin/true EXTRA_LDOPTIONS="%{?ldflags}"
-cd -
+#cd fglrx_tools/programs/fglrx_gamma
+#xmkmf
+#%%make INSTALLED_LIBS=-L../../lib/fglrx_gamma INCLUDES=-I../../../common/usr/X11R6/include CC="%__cc %optflags" RMAN=/bin/true EXTRA_LDOPTIONS="%{?ldflags}"
+#cd -
 %endif
 
 %install
@@ -491,8 +492,8 @@ install -d -m755		%{buildroot}%{_includedir}
 cp -a common/usr/include/*	%{buildroot}%{_includedir}
 chmod 0644 %{buildroot}%{_includedir}/*/*.h
 
-install -d -m755 %{buildroot}%{_includedir}/X11/extensions
-install -m644 common/usr/X11R6/include/X11/extensions/*.h  %{buildroot}%{_includedir}/X11/extensions
+#install -d -m755 %{buildroot}%{_includedir}/X11/extensions
+#install -m644 common/usr/X11R6/include/X11/extensions/*.h  %{buildroot}%{_includedir}/X11/extensions
 
 # install binaries
 install -d -m755					%{buildroot}%{_sbindir}
@@ -504,7 +505,7 @@ install -m755 common/usr/X11R6/bin/*			%{buildroot}%{_bindir}
 %if !%{atibuild}
 # install self-built binaries
 install -m755 fglrx_tools/fgl_glxgears/fgl_glxgears	%{buildroot}%{_bindir}
-install -m755 fglrx_tools/programs/fglrx_gamma/fglrx_xgamma %{buildroot}%{_bindir}
+#install -m755 fglrx_tools/programs/fglrx_gamma/fglrx_xgamma %{buildroot}%{_bindir}
 %endif
 
 # atieventsd initscript
@@ -531,7 +532,7 @@ ln -s su %{buildroot}%{_sysconfdir}/pam.d/amdcccle-su
 # man pages
 install -d -m755 %{buildroot}%{_mandir}/man1 %{buildroot}%{_mandir}/man8
 %if !%{atibuild}
-install -m644 fglrx_tools/programs/fglrx_gamma/fglrx_xgamma.man %{buildroot}%{_mandir}/man1/fglrx_xgamma.1
+#install -m644 fglrx_tools/programs/fglrx_gamma/fglrx_xgamma.man %{buildroot}%{_mandir}/man1/fglrx_xgamma.1
 %endif
 install -m644 common/usr/share/man/man8/* %{buildroot}%{_mandir}/man8
 
@@ -582,8 +583,8 @@ ln -s %{_libdir}/%{drivername}-qt4		%{buildroot}/usr/share/ati/%{_lib}
 %endif
 
 %if !%{atibuild}
-install -m755 fglrx_tools/lib/fglrx_gamma/libfglrx_gamma.so.1.0 %{buildroot}%{_libdir}/%{drivername}
-install -m644 fglrx_tools/lib/fglrx_gamma/libfglrx_gamma.a %{buildroot}%{_libdir}/%{drivername}
+#install -m755 fglrx_tools/lib/fglrx_gamma/libfglrx_gamma.so.1.0 %{buildroot}%{_libdir}/%{drivername}
+#install -m644 fglrx_tools/lib/fglrx_gamma/libfglrx_gamma.a %{buildroot}%{_libdir}/%{drivername}
 %endif
 
 # install X.org files
@@ -625,7 +626,7 @@ touch					%{buildroot}%{_sysconfdir}/ld.so.conf.d/GL.conf
 
 # modprobe.conf
 install -d -m755			%{buildroot}%{_sysconfdir}/modprobe.d
-touch					%{buildroot}%{_sysconfdir}/modprobe.d/display-driver.conf
+touch					%{buildroot}%{_sysconfdir}/modprobe.d/display-driver
 install -d -m755			%{buildroot}%{_sysconfdir}/%{drivername}
 echo "blacklist radeon"			> %{buildroot}%{_sysconfdir}/%{drivername}/modprobe.conf
 
@@ -669,7 +670,7 @@ fi
 %ifarch x86_64
 	--slave %{_prefix}/lib/libAMDXvBA.cap libAMDXvBA_cap %{_libdir}/%{drivername}/libAMDXvBA.cap \
 %endif
-	--slave %{_sysconfdir}/modprobe.d/display-driver.conf display-driver.conf %{_sysconfdir}/%{drivername}/modprobe.conf \
+	--slave %{_sysconfdir}/modprobe.d/display-driver display-driver.modconf %{_sysconfdir}/%{drivername}/modprobe.conf \
 	--slave %{_sysconfdir}/modprobe.preload.d/display-driver display-driver.preload %{_sysconfdir}/%{drivername}/modprobe.preload \
 %if %{mdkversion} >= 200910
 	--slave %{xorg_extra_modules} xorg_extra_modules %{ati_extdir} \
@@ -806,7 +807,7 @@ rm -rf %{buildroot}
 %dir %{_sysconfdir}/ld.so.conf.d/GL
 %{_sysconfdir}/ld.so.conf.d/GL/ati.conf
 
-%ghost %{_sysconfdir}/modprobe.d/display-driver.conf
+%ghost %{_sysconfdir}/modprobe.d/display-driver
 %ghost %{_sysconfdir}/modprobe.preload.d/display-driver
 %dir %{_sysconfdir}/%{drivername}
 %{_sysconfdir}/%{drivername}/XvMCConfig
@@ -835,7 +836,7 @@ rm -rf %{buildroot}
 %{_bindir}/atiode
 %{_bindir}/fgl_glxgears
 %{_bindir}/fglrxinfo
-%{_bindir}/fglrx_xgamma
+#%{_bindir}/fglrx_xgamma
 
 %{xorg_libdir}/modules/drivers/fglrx_drv.so
 %{xorg_libdir}/modules/linux/libfglrxdrm.so
@@ -873,7 +874,7 @@ rm -rf %{buildroot}
 %{_prefix}/lib/%{drivername}/libatiuki.so.1*
 %endif
 
-%{_libdir}/%{drivername}/libfglrx_gamma.so.1*
+#%{_libdir}/%{drivername}/libfglrx_gamma.so.1*
 %{_libdir}/%{drivername}/libfglrx_dm.so.1*
 %{_libdir}/%{drivername}/libatiadlxx.so
 %{_libdir}/%{drivername}/libAMDXvBA.cap
@@ -881,7 +882,7 @@ rm -rf %{buildroot}
 %{_libdir}/%{drivername}/libXvBAW.so.1*
 
 %if !%{atibuild}
-%{_mandir}/man1/fglrx_xgamma.1*
+#%{_mandir}/man1/fglrx_xgamma.1*
 %endif
 %{_mandir}/man8/atieventsd.8*
 
@@ -911,13 +912,13 @@ rm -rf %{buildroot}
 
 %files -n %{drivername}-devel
 %defattr(-,root,root)
-%{_libdir}/%{drivername}/libfglrx_gamma.a
+#%{_libdir}/%{drivername}/libfglrx_gamma.a
 %{_libdir}/%{drivername}/libfglrx_dm.a
-%{_libdir}/%{drivername}/libfglrx_gamma.so
+#%{_libdir}/%{drivername}/libfglrx_gamma.so
 %{_libdir}/%{drivername}/libfglrx_dm.so
 %{_libdir}/%{drivername}/libAMDXvBA.so
 %{_libdir}/%{drivername}/libXvBAW.so
-%{_includedir}/X11/extensions/fglrx_gamma.h
+#%{_includedir}/X11/extensions/fglrx_gamma.h
 %dir %{_includedir}/GL
 %{_includedir}/GL/*ATI.h
 %dir %{_includedir}/ATI
