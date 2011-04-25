@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.831.2
 # release:
-%define rel		2
+%define rel		3
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -599,7 +599,7 @@ install -d -m755			%{buildroot}%{_sysconfdir}/%{drivername}
 %if %{mdkversion} < 201100
 # modprobe.conf
 install -d -m755			%{buildroot}%{_sysconfdir}/modprobe.d
-touch					%{buildroot}%{_sysconfdir}/modprobe.d/display-driver
+touch					%{buildroot}%{_sysconfdir}/modprobe.d/display-driver.conf
 echo "blacklist radeon"			> %{buildroot}%{_sysconfdir}/%{drivername}/modprobe.conf
 
 # modprobe.preload.d
