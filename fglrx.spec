@@ -45,13 +45,13 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	11-3
+%define oversion	11-4
 # Advertised version, for description:
-%define mversion	11.3
+%define mversion	11.4
 # driver version from ati-packager-helper.sh:
-%define iversion	8.831.2
+%define iversion	8.841
 # release:
-%define rel		3
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -69,7 +69,7 @@
 %define drivername	fglrx
 %define xorg_version	pic
 # highest supported videodrv abi
-%define videodrv_abi	8
+%define videodrv_abi	10
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
@@ -192,7 +192,6 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-Patch11:	fglrx-8.831.2-2.6.38-console.diff
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -364,7 +363,6 @@ cd common # ensure patches do not touch outside
 %patch9 -p2
 %patch10 -p2
 cd ..
-%patch11 -p0
 
 cat > README.install.urpmi <<EOF
 This driver is for ATI Radeon HD 2000 and newer cards.
@@ -531,7 +529,10 @@ install -m644 common/usr/share/icons/ccc_large.xpm %{buildroot}%{_iconsdir}/%{dr
 # install libraries
 install -d -m755					%{buildroot}%{_libdir}/%{drivername}
 install -m755 %{archdir}/usr/X11R6/%{_lib}/*.*		%{buildroot}%{_libdir}/%{drivername}
-install -m755 %{archdir}/usr/%{_lib}/*			%{buildroot}%{_libdir}/%{drivername}
+install -m755 %{archdir}/usr/X11R6/%{_lib}/fglrx/*	%{buildroot}%{_libdir}/%{drivername}
+install -m755 %{archdir}/usr/%{_lib}/*.*		%{buildroot}%{_libdir}/%{drivername}
+mv %{buildroot}%{_libdir}/%{drivername}/{fglrx-,}libGL.so.1.2
+chmod 0644						%{buildroot}%{_libdir}/%{drivername}/*.a
 /sbin/ldconfig -n					%{buildroot}%{_libdir}/%{drivername}
 # create devel symlinks
 for file in %{buildroot}%{_libdir}/%{drivername}/*.so.*.*; do
@@ -539,8 +540,9 @@ for file in %{buildroot}%{_libdir}/%{drivername}/*.so.*.*; do
 done
 %ifarch x86_64
 install -d -m755					%{buildroot}%{_prefix}/lib/%{drivername}
-install -m755 arch/x86/usr/X11R6/lib/libGL*		%{buildroot}%{_prefix}/lib/%{drivername}
-install -m755 arch/x86/usr/lib/*			%{buildroot}%{_prefix}/lib/%{drivername}
+install -m755 arch/x86/usr/X11R6/lib/fglrx/*		%{buildroot}%{_prefix}/lib/%{drivername}
+install -m755 arch/x86/usr/lib/*.*			%{buildroot}%{_prefix}/lib/%{drivername}
+mv %{buildroot}%{_prefix}/lib/%{drivername}/{fglrx-,}libGL.so.1.2
 /sbin/ldconfig -n					%{buildroot}%{_prefix}/lib/%{drivername}
 # create devel symlinks
 for file in %{buildroot}%{_prefix}/lib/%{drivername}/*.so.*.*; do
@@ -564,7 +566,8 @@ install -d -m755						%{buildroot}%{xorg_libdir}/modules/linux
 install -m755 %{xverdir}/usr/X11R6/%{_lib}/modules/linux/*.so*	%{buildroot}%{xorg_libdir}/modules/linux
 install -m644 %{xverdir}/usr/X11R6/%{_lib}/modules/*.*o		%{buildroot}%{xorg_libdir}/modules
 install -d -m755						%{buildroot}%{ati_extdir}
-install -m755 %{xverdir}/usr/X11R6/%{_lib}/modules/extensions/*.so* %{buildroot}%{ati_extdir}
+install -m755 %{xverdir}/usr/X11R6/%{_lib}/modules/extensions/fglrx/*.so* %{buildroot}%{ati_extdir}
+mv %{buildroot}%{ati_extdir}/{fglrx-,}libglx.so
 
 %if %{mdkversion} == 200900
 touch							%{buildroot}%{xorg_libdir}/modules/extensions/libdri.so
