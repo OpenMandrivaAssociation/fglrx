@@ -45,11 +45,11 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	11-4
+%define oversion	11-5
 # Advertised version, for description:
-%define mversion	11.4
+%define mversion	11.5
 # driver version from ati-packager-helper.sh:
-%define iversion	8.841
+%define iversion	8.85
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
@@ -490,12 +490,16 @@ install -m755 %{SOURCE2} %{buildroot}%{_initrddir}/atieventsd
 
 # amdcccle data files
 install -d -m755 %{buildroot}%{_datadir}/ati/amdcccle
-install -m644 common/usr/share/ati/amdcccle/*.qm %{buildroot}%{_datadir}/ati/amdcccle
 rm -f amdcccle.langs
-for file in common/usr/share/ati/amdcccle/*.qm; do
-	file=$(basename $file)
-	lang=${file#amdcccle_}
+for fullname in common/usr/share/ati/amdcccle/*.qm; do
+	file=$(basename $fullname)
+	lang=${file#*_}
 	lang=${lang%%.qm}
+%if !%{bundle_qt}
+	# qt localization not necessary with non-bundled qt
+	[ "$file" = "${file#qt}" ] || continue
+%endif
+	install -m644 $fullname %{buildroot}%{_datadir}/ati/amdcccle
 	echo "%%lang($lang) %{_datadir}/ati/amdcccle/$file" >> amdcccle.langs
 done
 
@@ -614,6 +618,9 @@ echo "fglrx"				> %{buildroot}%{_sysconfdir}/%{drivername}/modprobe.preload
 # XvMCConfig
 echo "libAMDXvBA.so.1" > %{buildroot}%{_sysconfdir}/%{drivername}/XvMCConfig
 
+# PowerXpress intel
+ln -s %{_sysconfdir}/ld.so.conf.d/GL/standard.conf %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
+
 # install ldetect-lst pcitable files for backports
 sed -ne 's|^\s*FGL_ASIC_ID(\(0x....\)).*|\1|gp' common/lib/modules/fglrx/build_mod/fglrxko_pci_ids.h | tr '[:upper:]' '[:lower:]' | sort -u | sed 's,^.*$,0x1002\t\0\t"%{ldetect_cards_name}",' > pcitable.fglrx.lst
 [ $(stat -c%s pcitable.fglrx.lst) -gt 500 ]
@@ -649,6 +656,43 @@ urpme --auto \$dryrun \$pkgs || { echo "Failed to uninstall the AMD proprietary 
 [ -n "\$dryrun" ] || echo "The AMD proprietary driver has been uninstalled."
 EOF
 chmod 0755 %{buildroot}%{_datadir}/ati/amd-uninstall.sh
+
+# PowerXpress (switchable graphics)
+# - path hardcoded into driver
+install -d -m755 %{buildroot}%{_libdir}/fglrx
+cat > %{buildroot}%{_libdir}/fglrx/switchlibGL <<EOF
+#!/bin/sh
+
+amd_target="%{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file}"
+intel_target="%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf"
+
+case \$1 in
+amd)
+	update-alternatives --set gl_conf "\$amd_target" >/dev/null
+	;;
+intel)
+	update-alternatives --set gl_conf "\$intel_target" >/dev/null
+	;;
+query)
+	case \$(readlink -f "%{_sysconfdir}/ld.so.conf.d/GL.conf") in
+	\$amd_target)
+		echo "amd"
+		;;
+	\$intel_target)
+		echo "intel"
+		;;
+	*)
+		echo "unknown"
+		;;
+	esac
+	;;
+esac
+EOF
+chmod 0755 %{buildroot}%{_libdir}/fglrx/switchlibGL
+
+# It is not feasible to configure these separately with the alternatives
+# system, so use the same script for both.
+ln -s switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
 
 %if %{mdkversion} >= 200800
 %pre -n %{driverpkgname}
@@ -687,6 +731,13 @@ fi
 %if %{mdkversion} >= 200800
 	--slave %{_libdir}/xorg/modules/extensions/libglx.so libglx %{ati_extdir}/libglx.so
 %endif
+
+# Alternative for PowerXpress intel (switchable graphics)
+# This is a separate alternative so that this situation can be differentiated
+# from standard intel configuration by tools (e.g. so that radeon driver won't
+# be loaded despite fglrx not being configured anymore).
+%{_sbindir}/update-alternatives \
+	--install %{_sysconfdir}/ld.so.conf.d/GL.conf gl_conf %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf 50
 
 %if %{mdkversion} >= 200800
 if [ "$(readlink -e %{_sysconfdir}/ld.so.conf.d/GL.conf)" = "%{_sysconfdir}/ld.so.conf.d/GL/ati-hd2000.conf" ]; then
@@ -744,6 +795,9 @@ true
 %postun -n %{driverpkgname}
 if [ ! -f %{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file} ]; then
   %{_sbindir}/update-alternatives --remove gl_conf %{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file}
+fi
+if [ ! -f %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf ]; then
+  %{_sbindir}/update-alternatives --remove gl_conf %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
 fi
 # Call /sbin/ldconfig explicitely due to alternatives
 /sbin/ldconfig
@@ -819,6 +873,7 @@ rm -rf %{buildroot}
 %endif
 %dir %{_sysconfdir}/%{drivername}
 %{_sysconfdir}/%{drivername}/XvMCConfig
+%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
 %if %{mdkversion} < 201100
 %{_sysconfdir}/%{drivername}/modprobe.conf
 %{_sysconfdir}/%{drivername}/modprobe.preload
@@ -888,6 +943,10 @@ rm -rf %{buildroot}
 %{_libdir}/%{drivername}/libAMDXvBA.cap
 %{_libdir}/%{drivername}/libAMDXvBA.so.1*
 %{_libdir}/%{drivername}/libXvBAW.so.1*
+
+# PowerXpress
+%{_libdir}/fglrx/switchlibGL
+%{_libdir}/fglrx/switchlibglx
 
 %dir %{_datadir}/ati
 %{_datadir}/ati/amd-uninstall.sh
