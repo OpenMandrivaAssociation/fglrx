@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.85
 # release:
-%define rel		1
+%define rel		2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -669,9 +669,11 @@ intel_target="%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf"
 case \$1 in
 amd)
 	update-alternatives --set gl_conf "\$amd_target" >/dev/null
+	ldconfig -X
 	;;
 intel)
 	update-alternatives --set gl_conf "\$intel_target" >/dev/null
+	ldconfig -X
 	;;
 query)
 	case \$(readlink -f "%{_sysconfdir}/ld.so.conf.d/GL.conf") in
