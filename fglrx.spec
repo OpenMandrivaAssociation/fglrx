@@ -779,6 +779,11 @@ fi
 [ -x %{_sbindir}/update-ldetect-lst ] && %{_sbindir}/update-ldetect-lst || :
 %endif
 
+# Clear driver version numbers from amdpcsdb as suggested by AMD.
+# (fixes version display in amdcccle after upgrade)
+aticonfig --del-pcs-key=LDC,ReleaseVersion &>/dev/null || :
+aticonfig --del-pcs-key=LDC,Catalyst_Version &>/dev/null || :
+
 %if %{mdkversion} >= 200800
 %posttrans -n %{driverpkgname}
 # RPM seems to leave out the active /etc/fglrx* directory, likely due to
@@ -819,7 +824,7 @@ if [ ! -f %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf ]; then
   %{_sbindir}/update-alternatives --remove gl_conf %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
 fi
 # Call /sbin/ldconfig explicitely due to alternatives
-/sbin/ldconfig
+/sbin/ldconfig -X
 %if "%{ldetect_cards_name}" != ""
 [ -x %{_sbindir}/update-ldetect-lst ] && %{_sbindir}/update-ldetect-lst || :
 %endif
