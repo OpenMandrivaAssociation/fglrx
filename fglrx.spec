@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.85
 # release:
-%define rel		2
+%define rel		3
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -618,8 +618,12 @@ echo "fglrx"				> %{buildroot}%{_sysconfdir}/%{drivername}/modprobe.preload
 # XvMCConfig
 echo "libAMDXvBA.so.1" > %{buildroot}%{_sysconfdir}/%{drivername}/XvMCConfig
 
-# PowerXpress intel
-ln -s %{_sysconfdir}/ld.so.conf.d/GL/standard.conf %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
+# PowerXpress intel - use Mesa libGL but still keep ATI specific libs in search path
+echo "%{_libdir}/mesa" > %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
+%ifarch x86_64
+echo "%{_prefix}/lib/mesa" >> %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
+%endif
+cat %{buildroot}%{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file} >> %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
 
 # install ldetect-lst pcitable files for backports
 sed -ne 's|^\s*FGL_ASIC_ID(\(0x....\)).*|\1|gp' common/lib/modules/fglrx/build_mod/fglrxko_pci_ids.h | tr '[:upper:]' '[:lower:]' | sort -u | sed 's,^.*$,0x1002\t\0\t"%{ldetect_cards_name}",' > pcitable.fglrx.lst
@@ -694,7 +698,9 @@ chmod 0755 %{buildroot}%{_libdir}/fglrx/switchlibGL
 
 # It is not feasible to configure these separately with the alternatives
 # system, so use the same script for both.
-ln -s switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
+# Note: using a symlink here fails as the driver checks go+w without
+# dereferencing the symlink.
+cp -a %{buildroot}%{_libdir}/fglrx/switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
 
 %if %{mdkversion} >= 200800
 %pre -n %{driverpkgname}
@@ -733,14 +739,24 @@ fi
 %if %{mdkversion} >= 200800
 	--slave %{_libdir}/xorg/modules/extensions/libglx.so libglx %{ati_extdir}/libglx.so
 %endif
-
+%endif
 # Alternative for PowerXpress intel (switchable graphics)
 # This is a separate alternative so that this situation can be differentiated
 # from standard intel configuration by tools (e.g. so that radeon driver won't
 # be loaded despite fglrx not being configured anymore).
 %{_sbindir}/update-alternatives \
-	--install %{_sysconfdir}/ld.so.conf.d/GL.conf gl_conf %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf 50
-
+	--install %{_sysconfdir}/ld.so.conf.d/GL.conf gl_conf %{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf 50 \
+%if %{mdkversion} < 201100
+	--slave %{_sysconfdir}/modprobe.d/display-driver.conf display-driver.conf %{_sysconfdir}/%{drivername}/modprobe.conf \
+	--slave %{_sysconfdir}/modprobe.preload.d/display-driver display-driver.preload %{_sysconfdir}/%{drivername}/modprobe.preload \
+%endif
+%if %{mdkversion} >= 200800 && %{mdkversion} <= 200900
+	--slave %{_libdir}/xorg/modules/extensions/libglx.so libglx %{_libdir}/xorg/modules/extensions/standard/libglx.so \
+%if %{mdkversion} == 200900
+	--slave %{_libdir}/xorg/modules/extensions/libdri.so libdri.so %{_libdir}/xorg/modules/extensions/standard/libdri.so \
+%endif
+%endif
+#
 %if %{mdkversion} >= 200800
 if [ "$(readlink -e %{_sysconfdir}/ld.so.conf.d/GL.conf)" = "%{_sysconfdir}/ld.so.conf.d/GL/ati-hd2000.conf" ]; then
 	# Switch from the obsolete hd2000 branch:
@@ -752,8 +768,6 @@ if [ -e %{_sysconfdir}/ati/atiogl.xml.rpmnew -a ! -e %{_sysconfdir}/ati/atiogl.x
 	mv %{_sysconfdir}/ati/atiogl.xml.rpmnew %{_sysconfdir}/ati/atiogl.xml
 	echo "Moved %{_sysconfdir}/ati/atiogl.xml.rpmnew back to %{_sysconfdir}/ati/atiogl.xml."
 fi
-%endif
-# empty line so that /sbin/ldconfig is not passed to update-alternatives
 %endif
 # Call /sbin/ldconfig explicitely due to alternatives
 /sbin/ldconfig -X
