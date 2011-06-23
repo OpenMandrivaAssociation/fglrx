@@ -192,6 +192,8 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
+# BKL is gone in 2.6.39
+Patch11:	ati-2.6.39-no-big-kernel-lock.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -362,6 +364,7 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
+%patch11 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
