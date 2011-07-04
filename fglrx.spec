@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.861
 # release:
-%define rel		3
+%define rel		4
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -209,6 +209,9 @@ BuildRequires:	imake
 # Used by atieventsd:
 Suggests:	acpid
 BuildRequires:	ImageMagick
+%endif
+%if %{mdkversion} >= 201100
+BuildRequires:	rpm-build >= 1:5.3.12
 %endif
 
 %description
