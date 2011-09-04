@@ -45,13 +45,13 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	11-6
+%define oversion	11-8
 # Advertised version, for description:
-%define mversion	11.6
+%define mversion	11.8
 # driver version from ati-packager-helper.sh:
-%define iversion	8.861
+%define iversion	8.881
 # release:
-%define rel		4
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -367,7 +367,7 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
-%patch11 -p2
+#%%patch11 -p2 <- required for kernel < 2.6.39 ?
 cd ..
 
 cat > README.install.urpmi <<EOF
@@ -884,7 +884,7 @@ rm -rf %{buildroot}
 # described in configure.html seem to be used by the driver, though, so it is
 # packaged, while the other html files are not:
 %doc common/usr/share/doc/fglrx/configure.html
-%doc common/usr/share/doc/fglrx/ATI_LICENSE.TXT
+%doc common/usr/share/doc/fglrx/LICENSE.TXT
 %if %{mdkversion} <= 200810
 %doc README.8.532.upgrade.urpmi
 %endif
