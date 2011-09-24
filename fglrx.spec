@@ -1,3 +1,4 @@
+# http://www2.ati.com/rss/catalyst.rss
 
 ##############################################################################
 # This .spec file is dual licensed. It can be distributed either with the    #
