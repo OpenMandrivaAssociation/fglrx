@@ -46,11 +46,11 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	11-10
+%define oversion	11-11
 # Advertised version, for description:
-%define mversion	11.10
+%define mversion	11.11
 # driver version from ati-packager-helper.sh:
-%define iversion	8.902
+%define iversion	8.911
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
@@ -70,7 +70,7 @@
 %define drivername	fglrx
 %define xorg_version	pic
 # highest supported videodrv abi
-%define videodrv_abi	10
+%define videodrv_abi	11
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
