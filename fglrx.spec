@@ -979,6 +979,10 @@ rm -rf %{buildroot}
 %{_libdir}/fglrx/switchlibGL
 %{_libdir}/fglrx/switchlibglx
 
+# OpenCL
+%{_libdir}/fglrx/libOpenCL*
+%{_libdir}/fglrx/libamdocl*
+
 %dir %{_datadir}/ati
 %{_datadir}/ati/amd-uninstall.sh
 
