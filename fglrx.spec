@@ -963,6 +963,7 @@ rm -rf %{buildroot}
 # OpenCL
 %{_libdir}/fglrx/libOpenCL*
 %{_libdir}/fglrx/libamdocl*
+
 %ifarch x86_64
 %dir %{_prefix}/lib/%{drivername}
 %{_prefix}/lib/%{drivername}/libGL.so.1
@@ -973,8 +974,8 @@ rm -rf %{buildroot}
 %{_prefix}/lib/%{drivername}/libatiuki.so.1*
 
 # OpenCL
-%{_prefix}/fglrx/libOpenCL*
-%{_prefix}/fglrx/libamdocl*
+%{_prefix}/lib/fglrx/libOpenCL*
+%{_prefix}/lib/fglrx/libamdocl*
 %endif
 
 %{_libdir}/%{drivername}/libfglrx_dm.so.1*
