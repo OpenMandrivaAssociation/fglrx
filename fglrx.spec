@@ -30,6 +30,8 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 # - end of MIT license -
 
+%define name		fglrx
+
 # %atibuild is used to enable the ATI installer --buildpkg mode.
 # The macros version, rel, ati_dir, distsuffix need to be manually defined.
 # The macro mdkversion can also be overridden.
@@ -49,6 +51,8 @@
 %define mversion	11.12
 # driver version from ati-packager-helper.sh:
 %define iversion	8.92
+# release:
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -57,6 +61,7 @@
 %endif
 
 %define priority	1000
+%define release %mkrel %{rel}
 
 # set to 1 for a prerelease driver with an ubuntu tarball as source
 %define ubuntu_prerelease 0
@@ -165,14 +170,14 @@
 %define _exclude_files_from_autoreq ^%{_sbindir}/amdnotifyui$
 
 Summary:	ATI proprietary X.org driver and libraries
-Name:		fglrx
+Name:		%{name}
 Version:	%{version}
-Release:	2
+Release:	%{release}
 %if !%{atibuild}
 %if !%{ubuntu_prerelease}
 Source0:	https://a248.e.akamai.net/f/674/9206/0/www2.ati.com/drivers/linux/ati-driver-installer-%{oversion}-x86.x86_64.run
 %else
-Source0:	fglrx-installer_%{iversion}.orig.tar.gz
+Source0:        fglrx-installer_%{iversion}.orig.tar.gz
 %endif
 %endif
 Source1:	ati-packager.sh
@@ -194,9 +199,9 @@ License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
 ExclusiveArch:	%{ix86} x86_64
-
+BuildRoot:	%{_tmppath}/%{name}-root
 %if !%{atibuild}
-BuildRequires:	pkgconfig(gl)
+BuildRequires:	mesagl-devel
 BuildRequires:	libxmu-devel
 BuildRequires:	libxaw-devel
 BuildRequires:	libxp-devel
@@ -869,7 +874,11 @@ rmmod fglrx > /dev/null 2>&1 || true
 # rmmod any old driver if present and not in use (e.g. by X)
 rmmod fglrx > /dev/null 2>&1 || true
 
+%clean
+rm -rf %{buildroot}
+
 %files -n %{driverpkgname}
+%defattr(-,root,root)
 %doc README.install.urpmi README.manual-setup
 %doc README.8.600.upgrade.urpmi
 # the documentation files are grossly out of date; the configuration options
@@ -985,6 +994,7 @@ rmmod fglrx > /dev/null 2>&1 || true
 %{_mandir}/man8/atieventsd.8*
 
 %files -n %{drivername}-control-center -f amdcccle.langs
+%defattr(-,root,root)
 %doc common/usr/share/doc/amdcccle/*
 %{_sysconfdir}/security/console.apps/amdcccle-su
 %{_sysconfdir}/pam.d/amdcccle-su
@@ -1008,6 +1018,7 @@ rmmod fglrx > /dev/null 2>&1 || true
 %endif
 
 %files -n %{drivername}-devel
+%defattr(-,root,root)
 %{_libdir}/%{drivername}/libfglrx_dm.a
 %{_libdir}/%{drivername}/libfglrx_dm.so
 %{_libdir}/%{drivername}/libAMDXvBA.so
@@ -1025,4 +1036,5 @@ rmmod fglrx > /dev/null 2>&1 || true
 %endif
 
 %files -n dkms-%{drivername}
+%defattr(-,root,root)
 %{_usrsrc}/%{drivername}-%{version}-%{release}
