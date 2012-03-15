@@ -1,4 +1,3 @@
-# http://www2.ati.com/rss/catalyst.rss
 
 ##############################################################################
 # This .spec file is dual licensed. It can be distributed either with the    #
@@ -32,31 +31,31 @@
 
 %define name		fglrx
 
-# %atibuild is used to enable the ATI installer --buildpkg mode.
-# The macros version, rel, ati_dir, distsuffix need to be manually defined.
+# %amdbuild is used to enable the AMD installer --buildpkg mode.
+# The macros version, rel, amd_dir, distsuffix need to be manually defined.
 # The macro mdkversion can also be overridden.
-%define atibuild	0
-%{?_without_ati: %global atibuild 0}
-%{?_with_ati: %global atibuild 1}
+%define amdbuild	0
+%{?_without_amd: %global amdbuild 0}
+%{?_with_amd: %global amdbuild 1}
 
-%if !%{atibuild}
+%if !%{amdbuild}
 # NOTE: These version definitions are overridden by ati-packager.sh when
 # building with the --buildpkg method of the installer.
 
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	11-12
+%define oversion	12-2
 # Advertised version, for description:
-%define mversion	11.12
+%define mversion	12.2
 # driver version from ati-packager-helper.sh:
-%define iversion	8.92
+%define iversion	8.95
 # release:
-%define rel		3
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
-# Best-effort if ATI has made late changes (in atibuild mode)
+# Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
 %endif
 
@@ -70,7 +69,7 @@
 %define drivername	fglrx
 %define xorg_version	pic
 # highest supported videodrv abi
-%define videodrv_abi	11
+%define videodrv_abi	10
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
@@ -83,8 +82,8 @@
 # cooker ldetect-lst should be up-to-date
 %define ldetect_cards_name      %nil
 
-%if %{atibuild}
-# ATI cards not listed in main ldetect-lst pcitable are not likely
+%if %{amdbuild}
+# AMD/ATI cards not listed in main ldetect-lst pcitable are not likely
 # to be supported by radeon which is from the same time period.
 # radeonhd has greater chance of working due to it not using ID lists.
 # (main pcitable entries override our entries)
@@ -137,7 +136,7 @@
 %define archdir		arch/x86_64
 %endif
 
-# Other packages should not require any ATI specific proprietary libraries
+# Other packages should not require any AMD specific proprietary libraries
 # (if that is really necessary, we may want to split that specific lib out),
 # and this package should not be pulled in when libGL.so.1 is required.
 %define _provides_exceptions \\.so
@@ -149,7 +148,7 @@
 %endif
 
 # do not require fglrx stuff, they are all included
-%define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so%{qt_requires_exceptions}
+%define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}
 
 %ifarch x86_64
 # (anssi) Allow installing of 64-bit package if the runtime dependencies
@@ -169,20 +168,20 @@
 # and due to it having nothing to do with fglrx-control-center.
 %define _exclude_files_from_autoreq ^%{_sbindir}/amdnotifyui$
 
-Summary:	ATI proprietary X.org driver and libraries
+Summary:	AMD proprietary X.org driver and libraries
 Name:		%{name}
 Version:	%{version}
 Release:	%{release}
-%if !%{atibuild}
+%if !%{amdbuild}
 %if !%{ubuntu_prerelease}
-Source0:	https://a248.e.akamai.net/f/674/9206/0/www2.ati.com/drivers/linux/ati-driver-installer-%{oversion}-x86.x86_64.run
+Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-%{oversion}-x86.x86_64.run
 %else
 Source0:        fglrx-installer_%{iversion}.orig.tar.gz
 %endif
 %endif
 Source1:	ati-packager.sh
 Source2:	atieventsd.init
-%if !%{atibuild}
+%if !%{amdbuild}
 # Generates fglrx.spec from Mandriva SVN for use in AMD installer
 # archive. Requires kenobi access for fetching names for changelog.
 # (for manual use)
@@ -193,14 +192,12 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-# BKL is gone in 2.6.39
-Patch11:	ati-2.6.39-no-big-kernel-lock.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
 ExclusiveArch:	%{ix86} x86_64
 BuildRoot:	%{_tmppath}/%{name}-root
-%if !%{atibuild}
+%if !%{amdbuild}
 BuildRequires:	mesagl-devel
 BuildRequires:	libxmu-devel
 BuildRequires:	libxaw-devel
@@ -209,22 +206,19 @@ BuildRequires:	libxtst-devel
 BuildRequires:	imake
 # Used by atieventsd:
 Suggests:	acpid
-BuildRequires:	ImageMagick
-%endif
-%if %{mdkversion} >= 201100
-BuildRequires:	rpm-build >= 1:5.3.12
+BuildRequires:	imagemagick
 %endif
 
 %description
-Source package of the ATI proprietary driver. Binary packages are
+Source package of the AMD proprietary driver. Binary packages are
 named x11-driver-video-fglrx on Mandriva Linux 2008 and later, and ati on
 2007 and earlier.
-%if !%{atibuild}
-This package corresponds to ATI Catalyst version %mversion.
+%if !%{amdbuild}
+This package corresponds to AMD Catalyst version %mversion.
 %endif
 
 %package -n %{driverpkgname}
-Summary:	ATI proprietary X.org driver and libraries
+Summary:	AMD proprietary X.org driver and libraries
 Group:		System/Kernel and hardware
 Requires(post):	update-alternatives >= 1.9.0
 Requires(postun): update-alternatives
@@ -253,7 +247,11 @@ Conflicts:	x11-server-common < 1.6.0-11
 %endif
 %if %{mdkversion} >= 201100
 Requires:	x11-server-common >= 1.9
-%if !%{atibuild}
+%if !%{amdbuild}
+%if %{mdvver} >= 201200
+Requires(post):	rpm-helper
+Requires(preun): rpm-helper
+%endif
 # Conflict with the next videodrv ABI break.
 # The driver may support multiple ABI versions and therefore
 # a strict version-specific requirement would not be enough.
@@ -265,10 +263,10 @@ Provides:	atieventsd = %{version}-%{release}
 Obsoletes:	atieventsd < %{version}-%{release}
 
 %description -n %{driverpkgname}
-ATI proprietary X.org graphics driver, related libraries and
+AMD proprietary X.org graphics driver, related libraries and
 configuration tools.
 
-NOTE: You should use XFdrake to configure your ATI card. The
+NOTE: You should use XFdrake to configure your AMD card. The
 correct packages will be automatically installed and configured.
 
 If you do not want to use XFdrake, see README.manual-setup.
@@ -276,8 +274,8 @@ If you do not want to use XFdrake, see README.manual-setup.
 The graphical configuration utility, AMD Catalyst Control Center
 Linux Edition, is contained in the package
 %{drivername}-control-center.
-%if !%{atibuild}
-This package corresponds to ATI Catalyst version %mversion.
+%if !%{amdbuild}
+This package corresponds to AMD Catalyst version %mversion.
 %endif
 
 %package -n %{drivername}-control-center
@@ -300,13 +298,13 @@ Requires:	%{_lib}qtcore4 >= 3:4.5.2
 
 %description -n %{drivername}-control-center
 AMD Catalyst Control Center Linux Edition, a graphical configuration
-utility for the ATI proprietary X.org driver.
-%if !%{atibuild}
-This package corresponds to ATI Catalyst version %mversion.
+utility for the AMD proprietary X.org driver.
+%if !%{amdbuild}
+This package corresponds to AMD Catalyst version %mversion.
 %endif
 
 %package -n dkms-%{drivername}
-Summary:	ATI proprietary kernel module
+Summary:	AMD proprietary kernel module
 Group:		System/Kernel and hardware
 Requires:	dkms
 Requires(post):	dkms
@@ -316,17 +314,16 @@ Obsoletes:	dkms-fglrx-hd2000 < 8.42.3-5
 Obsoletes:	dkms-ati < %{version}-%{release}
 Provides:	dkms-ati = %{version}-%{release}
 %endif
-Requires:	%{driverpkgname} = %{version}
 
 %description -n dkms-%{drivername}
-ATI proprietary kernel module. This is to be used with the
+AMD proprietary kernel module. This is to be used with the
 %{driverpkgname} package.
-%if !%{atibuild}
-This package corresponds to ATI Catalyst version %mversion.
+%if !%{amdbuild}
+This package corresponds to AMD Catalyst version %mversion.
 %endif
 
 %package -n %{drivername}-devel
-Summary:	ATI proprietary development libraries and headers
+Summary:	AMD proprietary development libraries and headers
 Group:		Development/C
 Requires:	%{driverpkgname} = %{version}-%{release}
 %if %{mdkversion} >= 200800
@@ -336,17 +333,27 @@ Provides:	ati-devel = %{version}-%{release}
 %endif
 
 %description -n %{drivername}-devel
-ATI proprietary development libraries and headers. This package is
+AMD proprietary development libraries and headers. This package is
 not required for normal use.
 
 The main driver package name is %{driverpkgname}.
 
+%package -n %{drivername}-opencl
+Summary:	OpenCL libraries for the AMD proprietary driver
+Group: 		System/Kernel and hardware
+Requires:	kmod(fglrx) = %{version}
+
+%description -n %{drivername}-opencl
+OpenCL libraries for the AMD proprietary driver. This package is not
+required for normal use, it provides libraries to use AMD cards for High
+Performance Computing (HPC).
+
 %prep
 %setup -T -c
-%if %{atibuild}
-ln -s %{ati_dir}/%{xverdir} %{ati_dir}/arch .
+%if %{amdbuild}
+ln -s %{amd_dir}/%{xverdir} %{amd_dir}/arch .
 # patches affects common, so we cannot symlink it:
-cp -a %{ati_dir}/common .
+cp -a %{amd_dir}/common .
 %else
 %if %ubuntu_prerelease
 %setup -q -T -D -a 0
@@ -358,7 +365,7 @@ sh %{SOURCE0} --extract .
 mkdir fglrx_tools
 tar -xzf common/usr/src/ati/fglrx_sample_source.tgz -C fglrx_tools
 %if %ubuntu_prerelease
-[ -d "%xverdir" ] || (echo This driver version does not support your X.org server. Please wait for a new release from ATI. >&2; false)
+[ -d "%xverdir" ] || (echo This driver version does not support your X.org server. Please wait for a new release from AMD. >&2; false)
 %else
 [ "%iversion" = "$(./ati-packager-helper.sh --version)" ]
 %endif
@@ -368,15 +375,14 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
-#%%patch11 -p2 <- required for kernel < 2.6.39 ?
 cd ..
 
 cat > README.install.urpmi <<EOF
 This driver is for ATI Radeon HD 2000 and newer cards.
-Reconfiguring is not necessary when upgrading from a previous Mandriva ATI
+Reconfiguring is not necessary when upgrading from a previous Mandriva AMD
 driver package.
 
-Use XFdrake to configure X to use the correct ATI driver. Any needed
+Use XFdrake to configure X to use the correct AMD driver. Any needed
 packages will be automatically installed if not already present.
 1. Run XFdrake as root.
 2. Go to the Graphics Card list.
@@ -395,7 +401,7 @@ you, see README.manual-setup for manual installation instructions.
 EOF
 
 cat > README.manual-setup <<EOF
-This file describes the procedure for the manual installation of this ATI
+This file describes the procedure for the manual installation of this AMD
 driver package. You can find the instructions for the recommended automatic
 installation in the file 'README.install.urpmi' in this directory.
 
@@ -416,7 +422,7 @@ EOF
 
 cat > README.8.600.upgrade.urpmi <<EOF
 REMOVED GRAPHICS DRIVER SUPPORT NOTIFICATION:
-Versions 8.600 and later of ATI Proprietary Graphics driver (fglrx) only
+Versions 8.600 and later of AMD Proprietary Graphics driver (fglrx) only
 support Radeon HD 2000 (r600) or newer cards.
 
 If you have an older Radeon card or are unsure, please reconfigure your
@@ -432,7 +438,7 @@ EOF
 cat > README.8.532.upgrade.urpmi <<EOF
 IMPORTANT NOTE:
 Additional manual upgrade steps are needed in order to fully enable all
-features of this version of the proprietary ATI driver on this release
+features of this version of the proprietary AMD driver on this release
 of Mandriva Linux:
 Run "readlink -f /etc/alternatives/gl_conf". If it says
 "%{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file}", add the following two lines in the Files section
@@ -443,8 +449,8 @@ EOF
 %endif
 
 %build
-%if !%{atibuild}
-# %atibuild is done with minimal buildrequires
+%if !%{amdbuild}
+# %amdbuild is done with minimal buildrequires
 cd fglrx_tools/fgl_glxgears
 xmkmf
 %make RMAN=/bin/true CC="%__cc %optflags -I../../common/usr/include" EXTRA_LDOPTIONS="%{?ldflags}"
@@ -484,12 +490,15 @@ install -d -m755					%{buildroot}%{_sbindir}
 install -m755 %{archdir}/usr/sbin/*			%{buildroot}%{_sbindir}
 install -m755 common/usr/sbin/*				%{buildroot}%{_sbindir}
 install -d -m755					%{buildroot}%{_bindir}
+install -m755 %{archdir}/usr/bin/*			%{buildroot}%{_bindir}
 install -m755 %{archdir}/usr/X11R6/bin/*		%{buildroot}%{_bindir}
 install -m755 common/usr/X11R6/bin/*			%{buildroot}%{_bindir}
-%if !%{atibuild}
+%if !%{amdbuild}
 # install self-built binaries
 install -m755 fglrx_tools/fgl_glxgears/fgl_glxgears	%{buildroot}%{_bindir}
 %endif
+# compatibility symlink
+ln -s aticonfig %{buildroot}%{_bindir}/amdconfig
 
 # atieventsd initscript
 install -d -m755 %{buildroot}%{_initrddir}
@@ -529,7 +538,7 @@ sed -i 's,GNOME;KDE;,,' %{buildroot}%{_datadir}/applications/*.desktop
 
 # icons
 install -d -m755 %{buildroot}%{_miconsdir} %{buildroot}%{_iconsdir} %{buildroot}%{_liconsdir}
-%if !%{atibuild}
+%if !%{amdbuild}
 convert common/usr/share/icons/ccc_large.xpm -resize 16x16 %{buildroot}%{_miconsdir}/%{drivername}-amdcccle.png
 convert common/usr/share/icons/ccc_large.xpm -resize 32x32 %{buildroot}%{_iconsdir}/%{drivername}-amdcccle.png
 convert common/usr/share/icons/ccc_large.xpm -resize 48x48 %{buildroot}%{_liconsdir}/%{drivername}-amdcccle.png
@@ -625,7 +634,14 @@ echo "fglrx"				> %{buildroot}%{_sysconfdir}/%{drivername}/modprobe.preload
 # XvMCConfig
 echo "libAMDXvBA.so.1" > %{buildroot}%{_sysconfdir}/%{drivername}/XvMCConfig
 
-# PowerXpress intel - use Mesa libGL but still keep ATI specific libs in search path
+# CUDA icd
+install -d -m755				%{buildroot}%{_sysconfdir}/OpenCL/vendors
+install -m644 %{archdir}/etc/OpenCL/vendors/*	%{buildroot}%{_sysconfdir}/OpenCL/vendors
+%ifarch x86_64
+install -m644 arch/x86/etc/OpenCL/vendors/*	%{buildroot}%{_sysconfdir}/OpenCL/vendors
+%endif
+
+# PowerXpress intel - use Mesa libGL but still keep AMD specific libs in search path
 echo "%{_libdir}/mesa" > %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
 %ifarch x86_64
 echo "%{_prefix}/lib/mesa" >> %{buildroot}%{_sysconfdir}/%{drivername}/pxpress-free.ld.so.conf
@@ -712,6 +728,15 @@ chmod 0755 %{buildroot}%{_libdir}/fglrx/switchlibGL
 # dereferencing the symlink.
 cp -a %{buildroot}%{_libdir}/fglrx/switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
 
+%if %{mdvver} >= 201200
+# Strip files that spec-helper misses
+%__strip --strip-unneeded %{buildroot}%{_libdir}/xorg/modules/amdxmm.so
+%endif
+
+# Fix file permissions
+find %{buildroot} -name '*.h' -exec %__chmod 0644 {} \;
+find %{buildroot} -name '*.c' -exec %__chmod 0644 {} \;
+
 %if %{mdkversion} >= 200800
 %pre -n %{driverpkgname}
 # Handle alternatives-era /etc/ati directory
@@ -788,8 +813,8 @@ fi
 
 # Clear driver version numbers from amdpcsdb as suggested by AMD.
 # (fixes version display in amdcccle after upgrade)
-aticonfig --del-pcs-key=LDC,ReleaseVersion &>/dev/null || :
-aticonfig --del-pcs-key=LDC,Catalyst_Version &>/dev/null || :
+amdconfig --del-pcs-key=LDC,ReleaseVersion &>/dev/null || :
+amdconfig --del-pcs-key=LDC,Catalyst_Version &>/dev/null || :
 
 %if %{mdkversion} >= 200800
 %posttrans -n %{driverpkgname}
@@ -860,6 +885,10 @@ true
 %{clean_menus}
 %endif
 
+%post -n %{drivername}-opencl
+# explicit /sbin/ldconfig due to a non-standard library directory
+/sbin/ldconfig -X
+
 %post -n dkms-%{drivername}
 /usr/sbin/dkms --rpm_safe_upgrade add -m %{drivername} -v %{version}-%{release} &&
 /usr/sbin/dkms --rpm_safe_upgrade build -m %{drivername} -v %{version}-%{release} &&
@@ -878,7 +907,7 @@ rmmod fglrx > /dev/null 2>&1 || true
 rm -rf %{buildroot}
 
 %files -n %{driverpkgname}
-%defattr(-,root,root)
+%defattr(0644,root,root)
 %doc README.install.urpmi README.manual-setup
 %doc README.8.600.upgrade.urpmi
 # the documentation files are grossly out of date; the configuration options
@@ -889,6 +918,8 @@ rm -rf %{buildroot}
 %if %{mdkversion} <= 200810
 %doc README.8.532.upgrade.urpmi
 %endif
+
+%defattr(-,root,root)
 
 %if "%{ldetect_cards_name}" != ""
 %{_datadir}/ldetect-lst/pcitable.d/40%{drivername}.lst.gz
@@ -925,6 +956,7 @@ rm -rf %{buildroot}
 %{_sbindir}/amdnotifyui
 %{_sbindir}/atigetsysteminfo.sh
 
+%{_bindir}/amdconfig
 %{_bindir}/amdupdaterandrconfig
 %{_bindir}/amdxdg-su
 %{_bindir}/aticonfig
@@ -959,11 +991,6 @@ rm -rf %{buildroot}
 %{_libdir}/%{drivername}/libaticaldd.so
 %{_libdir}/%{drivername}/libaticalrt.so
 %{_libdir}/%{drivername}/libatiuki.so.1*
-
-# OpenCL
-%{_libdir}/fglrx/libOpenCL*
-%{_libdir}/fglrx/libamdocl*
-
 %ifarch x86_64
 %dir %{_prefix}/lib/%{drivername}
 %{_prefix}/lib/%{drivername}/libGL.so.1
@@ -972,10 +999,6 @@ rm -rf %{buildroot}
 %{_prefix}/lib/%{drivername}/libaticaldd.so
 %{_prefix}/lib/%{drivername}/libaticalrt.so
 %{_prefix}/lib/%{drivername}/libatiuki.so.1*
-
-# OpenCL
-%{_prefix}/lib/fglrx/libOpenCL*
-%{_prefix}/lib/fglrx/libamdocl*
 %endif
 
 %{_libdir}/%{drivername}/libfglrx_dm.so.1*
@@ -995,13 +1018,13 @@ rm -rf %{buildroot}
 
 %files -n %{drivername}-control-center -f amdcccle.langs
 %defattr(-,root,root)
-%doc common/usr/share/doc/amdcccle/*
+%attr(0644,root,root) %doc common/usr/share/doc/amdcccle/*
 %{_sysconfdir}/security/console.apps/amdcccle-su
 %{_sysconfdir}/pam.d/amdcccle-su
 %{_bindir}/amdcccle
 %dir %{_datadir}/ati
 %dir %{_datadir}/ati/amdcccle
-%if %{atibuild}
+%if %{amdbuild}
 %{_iconsdir}/%{drivername}-amdcccle.xpm
 %else
 %{_miconsdir}/%{drivername}-amdcccle.png
@@ -1035,6 +1058,26 @@ rm -rf %{buildroot}
 %{_prefix}/lib/%{drivername}/libatiuki.so
 %endif
 
-%files -n dkms-%{drivername}
+%files -n %{drivername}-opencl
 %defattr(-,root,root)
-%{_usrsrc}/%{drivername}-%{version}-%{release}
+%dir %{_sysconfdir}/OpenCL
+%dir %{_sysconfdir}/OpenCL/vendors
+%{_sysconfdir}/OpenCL/vendors/amdocl*.icd
+%{_bindir}/clinfo
+%{_libdir}/%{drivername}/libamdocl*.so
+%{_libdir}/%{drivername}/libOpenCL.so.1
+%{_libdir}/%{drivername}/libSlotMaximizer*.so
+%ifarch x86_64
+%{_prefix}/lib/%{drivername}/libamdocl*.so
+%{_prefix}/lib/%{drivername}/libOpenCL.so.1
+%{_prefix}/lib/%{drivername}/libSlotMaximizer*.so
+%endif
+
+%files -n dkms-%{drivername}
+%defattr(0644,root,root)
+%{_usrsrc}/%{drivername}-%{version}-%{release}/*.c
+%{_usrsrc}/%{drivername}-%{version}-%{release}/*.h
+%{_usrsrc}/%{drivername}-%{version}-%{release}/2.6.x/
+%{_usrsrc}/%{drivername}-%{version}-%{release}/dkms.conf
+%attr(0755,root,root) %{_usrsrc}/%{drivername}-%{version}-%{release}/libfglrx_ip.a
+%attr(0755,root,root) %{_usrsrc}/%{drivername}-%{version}-%{release}/make.sh
