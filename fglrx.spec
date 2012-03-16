@@ -186,6 +186,7 @@ Source2:	atieventsd.init
 # archive. Requires kenobi access for fetching names for changelog.
 # (for manual use)
 Source10:	generate-fglrx-spec-from-svn.sh
+Source11:	fglrx.rpmlintrc
 %endif
 Patch3:		fglrx-authfile-locations.patch
 Patch9:		fglrx-make_sh-custom-kernel-dir.patch
