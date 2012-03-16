@@ -187,6 +187,7 @@ Source2:	atieventsd.init
 # (for manual use)
 Source10:	generate-fglrx-spec-from-svn.sh
 Source11:	fglrx.rpmlintrc
+Source12:	README_for_maintainers.txt
 %endif
 Patch3:		fglrx-authfile-locations.patch
 Patch9:		fglrx-make_sh-custom-kernel-dir.patch
