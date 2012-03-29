@@ -139,12 +139,20 @@
 # Other packages should not require any AMD specific proprietary libraries
 # (if that is really necessary, we may want to split that specific lib out),
 # and this package should not be pulled in when libGL.so.1 is required.
+%if %{mdvver} <= 201100
+%define _provides_exceptions \\.so
+%else
 %define __noautoprov '\\.so'
+%endif
 
 %define qt_requires_exceptions %nil
 %if %{bundle_qt}
 # do not require Qt if it is bundled
+%if %{mdvver} <= 201100
+%define qt_requires_exceptions \\|libQtCore\\.so\\|libQtGui\\.so
+%else
 %define qt_requires_exceptions '\\|libQtCore\\.so\\|libQtGui\\.so'
+%endif
 %endif
 
 # do not require fglrx stuff, they are all included
@@ -155,9 +163,17 @@
 # of 32-bit libraries are not satisfied. If a 32-bit package that requires
 # libGL.so.1 is installed, the 32-bit mesa libs are pulled in and that will
 # pull the dependencies of 32-bit fglrx libraries in as well.
+%if %{mdvver} <= 201100
+%define _requires_exceptions %common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
+%else
 %define __noautoreq '%common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$'
+%endif
+%else
+%if %{mdvver} <= 201100
+%define _requires_exceptions %common_requires_exceptions
 %else
 %define __noautoreq '%common_requires_exceptions'
+%endif
 %endif
 
 # (anssi) Do not require qt for amdnotifyui (used as event notifier, as
@@ -166,7 +182,11 @@
 # It is not moved to fglrx-control-center as due to its small size it may
 # be wanted on e.g. KDE Ones, which can't have the full fglrx-control-center,
 # and due to it having nothing to do with fglrx-control-center.
+%if %{mdvver} <= 201100
+%define _exclude_files_from_autoreq ^%{_sbindir}/amdnotifyui$
+%else
 %define __noautoreqfiles ^%{_sbindir}/amdnotifyui$
+%endif
 
 Summary:	AMD proprietary X.org driver and libraries
 Name:		%{name}
@@ -198,7 +218,9 @@ License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
 ExclusiveArch:	%{ix86} x86_64
+%if %{mdvver} <= 201010
 BuildRoot:	%{_tmppath}/%{name}-root
+%endif
 %if !%{amdbuild}
 BuildRequires:	mesagl-devel
 BuildRequires:	libxmu-devel
