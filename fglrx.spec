@@ -139,7 +139,7 @@
 # Other packages should not require any AMD specific proprietary libraries
 # (if that is really necessary, we may want to split that specific lib out),
 # and this package should not be pulled in when libGL.so.1 is required.
-%if %{mdvver} <= 201100
+%if %{mdvver} < 201200
 %define _provides_exceptions \\.so
 %else
 %define __noautoprov '\\.so'
@@ -148,7 +148,7 @@
 %define qt_requires_exceptions %nil
 %if %{bundle_qt}
 # do not require Qt if it is bundled
-%if %{mdvver} <= 201100
+%if %{mdvver} < 201200
 %define qt_requires_exceptions \\|libQtCore\\.so\\|libQtGui\\.so
 %else
 %define qt_requires_exceptions '\\|libQtCore\\.so\\|libQtGui\\.so'
@@ -156,20 +156,24 @@
 %endif
 
 # do not require fglrx stuff, they are all included
+%if %{mdvver} < 201200
+%define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}
+%else
 %define common_requires_exceptions 'libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}'
+%endif
 
 %ifarch x86_64
 # (anssi) Allow installing of 64-bit package if the runtime dependencies
 # of 32-bit libraries are not satisfied. If a 32-bit package that requires
 # libGL.so.1 is installed, the 32-bit mesa libs are pulled in and that will
 # pull the dependencies of 32-bit fglrx libraries in as well.
-%if %{mdvver} <= 201100
+%if %{mdvver} < 201200
 %define _requires_exceptions %common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
 %else
 %define __noautoreq '%common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$'
 %endif
 %else
-%if %{mdvver} <= 201100
+%if %{mdvver} < 201200
 %define _requires_exceptions %common_requires_exceptions
 %else
 %define __noautoreq '%common_requires_exceptions'
@@ -754,10 +758,10 @@ chmod 0755 %{buildroot}%{_libdir}/fglrx/switchlibGL
 # dereferencing the symlink.
 cp -a %{buildroot}%{_libdir}/fglrx/switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
 
-%if %{mdvver} >= 201200
-# Strip files that spec-helper misses
-%__strip --strip-unneeded %{buildroot}%{_libdir}/xorg/modules/amdxmm.so
-%endif
+#%if %{mdvver} >= 201200
+## Strip files that spec-helper misses
+#%__strip --strip-unneeded %{buildroot}%{_libdir}/xorg/modules/amdxmm.so
+#%endif
 
 # Fix file permissions
 find %{buildroot} -name '*.h' -exec %__chmod 0644 {} \;
