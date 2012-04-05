@@ -45,13 +45,13 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	12-3
+%define oversion	12-4
 # Advertised version, for description:
-%define mversion	12.3
+%define mversion	12.4
 # driver version from ati-packager-helper.sh:
-%define iversion	8.951
+%define iversion	8.96
 # release:
-%define rel		2
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -64,6 +64,8 @@
 
 # set to 1 for a prerelease driver with an ubuntu tarball as source
 %define ubuntu_prerelease 0
+# set to 1 for a prerelease driver with an OpenCL tarball as source
+%define opencl_prerelease 1
 
 %define driverpkgname	x11-driver-video-fglrx
 %define drivername	fglrx
@@ -198,7 +200,11 @@ Version:	%{version}
 Release:	%{release}
 %if !%{amdbuild}
 %if !%{ubuntu_prerelease}
+%if !%{opencl_prerelease}
 Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-%{oversion}-x86.x86_64.run
+%else
+Source0:	http://download2-developer.amd.com/amd/APPSDK/OpenCL1.2betadriversLinux.tgz
+%endif
 %else
 Source0:        fglrx-installer_%{iversion}.orig.tar.gz
 %endif
@@ -384,13 +390,17 @@ ln -s %{amd_dir}/%{xverdir} %{amd_dir}/arch .
 # patches affects common, so we cannot symlink it:
 cp -a %{amd_dir}/common .
 %else
+%if %opencl_prerelease
+%setup -q -n fglrx-%iversion
+sh *.run --extract .
+%else
 %if %ubuntu_prerelease
 %setup -q -T -D -a 0
 ln -s . common
 %else
 sh %{SOURCE0} --extract .
 %endif
-
+%endif
 mkdir fglrx_tools
 tar -xzf common/usr/src/ati/fglrx_sample_source.tgz -C fglrx_tools
 %if %ubuntu_prerelease
