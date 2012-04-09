@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.96
 # release:
-%define rel		1
+%define rel		2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -153,7 +153,7 @@
 %if %{mdvver} < 201200
 %define qt_requires_exceptions \\|libQtCore\\.so\\|libQtGui\\.so
 %else
-%define qt_requires_exceptions '\\|libQtCore\\.so\\|libQtGui\\.so'
+%define qt_requires_exceptions |libQtCore\\.so|libQtGui\\.so
 %endif
 %endif
 
@@ -161,7 +161,7 @@
 %if %{mdvver} < 201200
 %define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}
 %else
-%define common_requires_exceptions 'libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}'
+%define common_requires_exceptions libfglrx.+\\.so|libati.+\\.so|libOpenCL\\.so%{qt_requires_exceptions}
 %endif
 
 %ifarch x86_64
@@ -172,7 +172,7 @@
 %if %{mdvver} < 201200
 %define _requires_exceptions %common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
 %else
-%define __noautoreq '%common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$'
+%define __noautoreq '%common_requires_exceptions|lib.*so\\.[^(]+(\\([^)]+\\))?$'
 %endif
 %else
 %if %{mdvver} < 201200
