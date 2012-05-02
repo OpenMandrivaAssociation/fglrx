@@ -49,9 +49,9 @@
 # Advertised version, for description:
 %define mversion	12.4
 # driver version from ati-packager-helper.sh:
-%define iversion	8.96
+%define iversion	8.961
 # release:
-%define rel		2
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -65,7 +65,7 @@
 # set to 1 for a prerelease driver with an ubuntu tarball as source
 %define ubuntu_prerelease 0
 # set to 1 for a prerelease driver with an OpenCL tarball as source
-%define opencl_prerelease 1
+%define opencl_prerelease 0
 
 %define driverpkgname	x11-driver-video-fglrx
 %define drivername	fglrx
@@ -141,27 +141,27 @@
 # Other packages should not require any AMD specific proprietary libraries
 # (if that is really necessary, we may want to split that specific lib out),
 # and this package should not be pulled in when libGL.so.1 is required.
-%if %{mdvver} < 201200
-%define _provides_exceptions \\.so
-%else
+%if %{_use_internal_dependency_generator}
 %define __noautoprov '\\.so'
+%else
+%define _provides_exceptions \\.so
 %endif
 
 %define qt_requires_exceptions %nil
 %if %{bundle_qt}
 # do not require Qt if it is bundled
-%if %{mdvver} < 201200
-%define qt_requires_exceptions \\|libQtCore\\.so\\|libQtGui\\.so
-%else
+%if %{_use_internal_dependency_generator}
 %define qt_requires_exceptions |libQtCore\\.so|libQtGui\\.so
+%else
+%define qt_requires_exceptions \\|libQtCore\\.so\\|libQtGui\\.so
 %endif
 %endif
 
 # do not require fglrx stuff, they are all included
-%if %{mdvver} < 201200
-%define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}
-%else
+%if %{_use_internal_dependency_generator}
 %define common_requires_exceptions libfglrx.+\\.so|libati.+\\.so|libOpenCL\\.so%{qt_requires_exceptions}
+%else
+%define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}
 %endif
 
 %ifarch x86_64
@@ -169,16 +169,16 @@
 # of 32-bit libraries are not satisfied. If a 32-bit package that requires
 # libGL.so.1 is installed, the 32-bit mesa libs are pulled in and that will
 # pull the dependencies of 32-bit fglrx libraries in as well.
-%if %{mdvver} < 201200
-%define _requires_exceptions %common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
+%if %{_use_internal_dependency_generator}
+%define __noautoreq '%{common_requires_exceptions}|lib.*so\\.[^(]+(\\([^)]+\\))?$'
 %else
-%define __noautoreq '%common_requires_exceptions|lib.*so\\.[^(]+(\\([^)]+\\))?$'
+%define _requires_exceptions %{common_requires_exceptions}\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
 %endif
 %else
-%if %{mdvver} < 201200
-%define _requires_exceptions %common_requires_exceptions
+%if %{_use_internal_dependency_generator}
+%define __noautoreq '%{common_requires_exceptions}'
 %else
-%define __noautoreq '%common_requires_exceptions'
+%define _requires_exceptions %{common_requires_exceptions}
 %endif
 %endif
 
@@ -768,11 +768,6 @@ chmod 0755 %{buildroot}%{_libdir}/fglrx/switchlibGL
 # dereferencing the symlink.
 cp -a %{buildroot}%{_libdir}/fglrx/switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
 
-#%if %{mdvver} >= 201200
-## Strip files that spec-helper misses
-#%__strip --strip-unneeded %{buildroot}%{_libdir}/xorg/modules/amdxmm.so
-#%endif
-
 # Fix file permissions
 find %{buildroot} -name '*.h' -exec %__chmod 0644 {} \;
 find %{buildroot} -name '*.c' -exec %__chmod 0644 {} \;
@@ -947,7 +942,7 @@ rmmod fglrx > /dev/null 2>&1 || true
 rm -rf %{buildroot}
 
 %files -n %{driverpkgname}
-%defattr(0644,root,root)
+%defattr(0644,root,root,0755)
 %doc README.install.urpmi README.manual-setup
 %doc README.8.600.upgrade.urpmi
 # the documentation files are grossly out of date; the configuration options
@@ -1057,7 +1052,7 @@ rm -rf %{buildroot}
 %{_mandir}/man8/atieventsd.8*
 
 %files -n %{drivername}-control-center -f amdcccle.langs
-%defattr(-,root,root)
+%defattr(-,root,root,0755)
 %attr(0644,root,root) %doc common/usr/share/doc/amdcccle/*
 %{_sysconfdir}/security/console.apps/amdcccle-su
 %{_sysconfdir}/pam.d/amdcccle-su
@@ -1081,7 +1076,7 @@ rm -rf %{buildroot}
 %endif
 
 %files -n %{drivername}-devel
-%defattr(-,root,root)
+%defattr(-,root,root,0755)
 %{_libdir}/%{drivername}/libfglrx_dm.a
 %{_libdir}/%{drivername}/libfglrx_dm.so
 %{_libdir}/%{drivername}/libAMDXvBA.so
@@ -1099,7 +1094,7 @@ rm -rf %{buildroot}
 %endif
 
 %files -n %{drivername}-opencl
-%defattr(-,root,root)
+%defattr(-,root,root,0755)
 %dir %{_sysconfdir}/OpenCL
 %dir %{_sysconfdir}/OpenCL/vendors
 %{_sysconfdir}/OpenCL/vendors/amdocl*.icd
@@ -1114,7 +1109,7 @@ rm -rf %{buildroot}
 %endif
 
 %files -n dkms-%{drivername}
-%defattr(0644,root,root)
+%defattr(0644,root,root,0755)
 %{_usrsrc}/%{drivername}-%{version}-%{release}/*.c
 %{_usrsrc}/%{drivername}-%{version}-%{release}/*.h
 %{_usrsrc}/%{drivername}-%{version}-%{release}/2.6.x/
