@@ -45,13 +45,14 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	12-4
+#define oversion	12-6
+%define oversion	%{iversion}
 # Advertised version, for description:
-%define mversion	12.4
+%define mversion	12.6
 # driver version from ati-packager-helper.sh:
-%define iversion	8.961
+%define iversion	8.98
 # release:
-%define rel		1
+%define rel		0.beta.1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -89,10 +90,10 @@
 # to be supported by radeon which is from the same time period.
 # radeonhd has greater chance of working due to it not using ID lists.
 # (main pcitable entries override our entries)
-%define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
+%define ldetect_cards_name	ATI Radeon HD 5000 and later (vesa/fglrx)
 %endif
 
-%if %{mdkversion} <= 201020
+%if %{mdkversion} <= 201100
 %define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
 %endif
 
@@ -115,18 +116,6 @@
 %if %{mdkversion} <= 200800
 # vesa/fglrx
 %define ldetect_cards_name      ATI Radeon X1300 - X1950
-%endif
-
-%if %{mdkversion} <= 200710
-%define driverpkgname	ati
-%define drivername	ati
-# fbdev/fglrx
-%define ldetect_cards_name      ATI Radeon X1300 and later
-%endif
-
-%if %{mdkversion} <= 200700
-# vesa/fglrx
-%define ldetect_cards_name      ATI Radeon (vesa)
 %endif
 
 %ifarch %ix86
@@ -224,7 +213,7 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-Patch11:	fglrx-8.951-kernel-3.3.x_fix.diff
+#Patch11:	fglrx-8.951-kernel-3.3.x_fix.diff
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -414,7 +403,7 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
-%patch11 -p0
+#patch11 -p0
 cd ..
 
 cat > README.install.urpmi <<EOF
@@ -772,6 +761,8 @@ cp -a %{buildroot}%{_libdir}/fglrx/switchlibGL %{buildroot}%{_libdir}/fglrx/swit
 find %{buildroot} -name '*.h' -exec %__chmod 0644 {} \;
 find %{buildroot} -name '*.c' -exec %__chmod 0644 {} \;
 
+touch %{buildroot}%{_sysconfdir}/ati/atiapfuser.blb
+
 %if %{mdkversion} >= 200800
 %pre -n %{driverpkgname}
 # Handle alternatives-era /etc/ati directory
@@ -1048,6 +1039,9 @@ rm -rf %{buildroot}
 
 %dir %{_datadir}/ati
 %{_datadir}/ati/amd-uninstall.sh
+
+%config(noreplace) %{_sysconfdir}/ati/atiapfuser.blb
+%config(noreplace) %{_sysconfdir}/ati/atiapfxx.blb
 
 %{_mandir}/man8/atieventsd.8*
 
