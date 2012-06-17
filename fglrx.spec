@@ -52,7 +52,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	8.98
 # release:
-%define rel		0.beta.1
+%define rel		0.beta.2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -214,6 +214,8 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
 #Patch11:	fglrx-8.951-kernel-3.3.x_fix.diff
+Patch13:	fglrx-change-to-for_each_possible_cpu.patch
+Patch14:	fglrx-needs-asm_fpu-internal.h.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -404,6 +406,8 @@ cd common # ensure patches do not touch outside
 %patch9 -p2
 %patch10 -p2
 #patch11 -p0
+%patch13 -p2
+%patch14 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
