@@ -45,12 +45,12 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	12-6
-#define oversion	%{iversion}
+#define oversion	12-8
+%define oversion	%{iversion}
 # Advertised version, for description:
-%define mversion	12.6
+%define mversion	12.8
 # driver version from ati-packager-helper.sh:
-%define iversion	8.98
+%define iversion	8.982
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
@@ -90,7 +90,7 @@
 # to be supported by radeon which is from the same time period.
 # radeonhd has greater chance of working due to it not using ID lists.
 # (main pcitable entries override our entries)
-%define ldetect_cards_name	ATI Radeon HD 5000 and later (vesa/fglrx)
+%define ldetect_cards_name	ATI Radeon HD 5000 and later without free driver (vesa/fglrx)
 %endif
 
 %if %{mdkversion} <= 201100
@@ -213,9 +213,6 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-#Patch11:	fglrx-8.951-kernel-3.3.x_fix.diff
-Patch13:	fglrx-change-to-for_each_possible_cpu.patch
-Patch14:	fglrx-needs-asm_fpu-internal.h.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -405,9 +402,6 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
-#patch11 -p0
-%patch13 -p2
-%patch14 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
