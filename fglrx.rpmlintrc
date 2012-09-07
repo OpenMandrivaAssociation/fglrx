@@ -1,0 +1,2 @@
+addFilter ("E: unstripped-binary-or-object")
+addFilter ("E: hardcoded-library-path")
