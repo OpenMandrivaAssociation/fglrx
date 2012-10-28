@@ -164,7 +164,7 @@ Release:	%{release}
 %if !%{amdbuild}
 %if !%{ubuntu_prerelease}
 %if !%{opencl_prerelease}
-Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-%{oversion}-x86.x86_64.run
+Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-catalyst-%{oversion}-x86.x86_64.run
 %else
 Source0:	http://download2-developer.amd.com/amd/APPSDK/OpenCL1.2betadriversLinux.tgz
 %endif
