@@ -1,214 +1,150 @@
 #!/bin/sh
 #
 # Purpose
-#   Mandriva AMD packaging script
+#   Mandriva ATI packaging script
 #
 # Usage
 #   See README.distro document
-#
-# License
-#   This file is available with the same license as Mandriva fglrx.spec,
-#   see that file for detailed license information.
+
+# prevent problems due to locales when grepping for 'wrote:'
+export LC_ALL=C
 
 # List of supported distributions.
-supported_distros="2007.0 2007.1 2008.0 2008.1 2009.0 2009.1 2010.0 2010.1 2010.2 2011.0 2012.0"
+SuppDistro="2006 2007 2008 2009 2010 2011 2012"
 
-buildCheck()
+#Function: getSupportedPackages()
+#Purpose: lists distribution supported packages
+getSupportedPackages()
 {
-    print_msg_uninstalled="$1"
-    if [ ! -f /etc/mandriva-release ]; then
-        echo "You can build Mandriva packages only on a Mandriva Linux system."
-        return 1
-    fi
-    [ -x /usr/bin/rpmbuild ] && return 0
-    if [ -n "$print_msg_uninstalled" ]; then
-        echo "You need the rpm-build package to build packages."
-    fi
-    return 2
-}   
+    #Determine absolute path of <installer root>/<distro>
+    #RelDistroDir=`dirname $0`
+    #AbsDistroDir=`cd ${RelDistroDir} 2>/dev/null && pwd`
+    #RootDir="${AbsDistroDir}/../../"
 
-buildPrep()
-{
-    distro=$1
-    dryrun=$2
-
-    buildCheck "$dryrun" && exit 0
-    [ $? -eq 1 ] && exit ${ATI_INSTALLER_ERR_PREP}
-
-    if [ -n "$DISPLAY" ]; then
-        gurpmi --auto rpm-build
-    else
-        su -c "urpmi --auto rpm-build"
-    fi
-
-    [ -x /usr/bin/rpmbuild ] && exit 0
-
-    echo "Package rpm-build is needed but installation failed."
-    exit ${ATI_INSTALLER_ERR_PREP}
+    for d in ${SuppDistro}; do
+	    echo $d
+    done
 }
 
-commonRPMparams()
-{
-    distro=$1
-    version=$(./ati-packager-helper.sh --version)
-    # insert 0 to the end of version if helper_version is two-decimal
-    [ $(echo $version | cut -f2 -d.) -lt 100 ] && version=${version}0
-    # --specfile can't take --with
-    echo -e "--define\n _with_amd 1"
-    echo -e "--define\n iversion $(./ati-packager-helper.sh --version)"
-    echo -e "--define\n version $version"
-    echo -e "--define\n rel $(./ati-packager-helper.sh --release)"
-    echo -e "--define\n distsuffix amd.mdv"
-    echo -e "--define\n vendor $(./ati-packager-helper.sh --vendor)"
-    echo -e "--define\n packager $(./ati-packager-helper.sh --vendor)"
-    echo -e "--define\n mdkversion $(echo ${distro}0 | tr -d .)"
-    echo -e "--define\n mandriva_release ${distro}"
-    echo -e "--define\n _sourcedir $PWD/packages/Mandriva"
-}
-
+#Function: buildPackage()
+#Purpose: build the requested package if it is supported
 buildPackage()
 {
-    distro=$1
-    buildCheck 1 || exit 1
-    installer_root="$PWD"
-    temp_root="$(mktemp -d --tmpdir amd.XXXXXX)"
+    DistroName=$1						# Well known X or distro name
+    RelDistroDir=`dirname $0`					# Relative path to the distro directory
+    AbsDistroDir=`cd ${RelDistroDir} 2>/dev/null && pwd`	# Absolute path to the distro directory
+    InstallerRootDir=`pwd`    					# Absolute path of the <installer root> directory
+    RpmDirs="BUILD SPECS SOURCES RPMS SRPMS tmp"
+    Arch=`uname -m`						# Architecture
 
-    mkdir -p $temp_root/{RPMS,BUILD,tmp}
-
-    # hack to avoid word splitting of --defines from commonRPMparams
-    oldIFS="$IFS"
-    IFS=$'\n'
-
-    LC_ALL=C rpmbuild -bb \
-	$(commonRPMparams $distro) \
-	--define "_topdir ${temp_root}" \
-	--define "_builddir ${temp_root}/BUILD" \
-	--define "_rpmdir ${temp_root}/RPMS" \
-	--define "_tmppath ${temp_root}/tmp" \
-	--define "amd_dir ${installer_root}" \
-	${installer_root}/packages/Mandriva/fglrx.spec &> $temp_root/output.log
-
-    rc=$?
-    IFS="$oldIFS"
-
-    if [ $rc -ne 0 ]; then
-        echo "Building package failed!"
-        echo "rpmbuild output follows:"
-        cat $temp_root/output.log
-        rm -rf "$temp_root"
-        exit 1
+    # before trying to build something, check that we have at least rpm-build
+    if [ ! -x /usr/bin/rpmbuild ]; then
+	    echo "Please install the rpm-build package !"
+	    exit 1
     fi
-    movedir=$(readlink -f ..)
-    for package in ${temp_root}/RPMS/*/*.rpm; do
-        mv $package $movedir
-        echo "Created package: $movedir/$(basename $package)"
+
+    RpmRoot=`mktemp -d ${TMPDIR:=/tmp}/ati.XXXXXX`		# Rpm TopDir
+    TmpPkgBuildDir="${RpmRoot}/BUILD"
+    TmpPkgBuildOut="${RpmRoot}/pkg_build.out"			# Temporary file to output diagnostics of the 
+    TmpPkgSpec="${RpmRoot}/SPECS/fglrx.spec"			# Spec file
+    EXIT_CODE=0							# Script exit code
+
+    # create directories
+    for d in ${RpmDirs}; do
+	    mkdir -p ${RpmRoot}/$d
     done
-    rm -rf "$temp_root"
-    exit 0
-}
 
-installPackage()
-{
-    package=$1
-    distrover=$(cat /etc/version | cut -d. -f1,2)
-    if [ "${package}" != "${distrover}" ]; then
-        echo "Mandriva Linux ${distrover} can't use ${package} packages."
-        exit 1
-    fi
+    # copy spec file and binaries
+    cp ${AbsDistroDir}/fglrx.spec ${TmpPkgSpec}
 
-    # hack to avoid word splitting of --defines from commonRPMparams
-    oldIFS="$IFS"
-    IFS=$'\n'
+    #Build the package
+    rpm -bb --with ati \
+	--define "_topdir ${RpmRoot}" \
+	--define "_tmppath ${RpmRoot}/tmp" \
+	--define "_builddir ${RpmRoot}/BUILD" \
+	--define "_rpmdir ${RpmRoot}/RPMS" \
+	--define "_sourcedir ${AbsDistroDir}" \
+	--define "version $(./ati-packager-helper.sh --version)" \
+	--define "rel $(./ati-packager-helper.sh --release)" \
+	--define "ati_dir ${InstallerRootDir}" \
+	--define "distsuffix amd.mdv" \
+	--define "vendor $(./ati-packager-helper.sh --vendor)" \
+	--define "packager $(./ati-packager-helper.sh --vendor)" \
+	--define "mdkversion ${DistroName}00" \
+	--define "mandriva_release ${DistroName}" \
+	${TmpPkgSpec} > ${TmpPkgBuildOut} 2>&1
 
-    packagenames="$(rpm -q --specfile \
-	$(commonRPMparams $package) \
-	--qf '%{name}-%{version}-%{release}.%{arch}.rpm\n' \
-	$(dirname $0)/fglrx.spec | tail -n+2 | grep -v -e ^fglrx-debug -e ^fglrx-__restore__)"
-
-    IFS="$oldIFS"
-
-    if [ -z "${packagenames}" ]; then
-        echo "Unable to determine package names."
-        exit 1
-    fi
-    pushd .. >/dev/null
-    if [ -n "$DISPLAY" ]; then
-        gurpmi --auto $packagenames
+    #Retrieve the absolute path to the built package
+    if [ $? -eq 0 ]; then
+        PACKAGE_STR=`grep "Wrote: .*\.rpm" ${TmpPkgBuildOut} | sed -r 's!Wrote:(.*)!\1!'` 	#String containing info where the package was created
     else
-        su -c "urpmi --auto $packagenames"
+	EXIT_CODE=1
     fi
-    ret=$?
-    popd >/dev/null
-    if [ $ret -ne 0 ]; then
-        echo "Unable to install packages."
-        exit 1
+    
+    #After-build diagnostics and processing
+    if [ ${EXIT_CODE} -eq 0 ]; then
+    	AbsInstallerParentDir=`cd ${InstallerRootDir}/.. 2>/dev/null && pwd` 	# Absolute path to the installer parent directory
+	for p in ${PACKAGE_STR}; do
+        	cp $p ${AbsInstallerParentDir}	# Copy the created package to the directory where the self-extracting driver archive is located
+        	echo "Package ${AbsInstallerParentDir}/`basename ${p}` has been successfully generated"
+	done
+    else
+        echo "Package build failed!"
+        echo "Package build utility output:"
+        cat ${TmpPkgBuildOut} 
+		EXIT_CODE=1
     fi
-    echo "Installation successful."
-    exit 0
+	
+    # Clean-up
+    rm -rf ${RpmRoot} > /dev/null
+    
+    exit ${EXIT_CODE}
 }
 
-isValidDistro()
-{
-    for supp_distro in $supported_distros; do
-        [ "${supp_distro}" = "$1" ] && return 0 
-    done
-    return 1
-}
+#Starting point of this script, process the {action} argument
 
-checkDistro()
-{
-    distro=$1
-
-    if ! isValidDistro "$distro"; then
-        echo "Unsupported distribution:" $distro
-        exit 1
-    fi
-}
-
+#Requested action
 action=$1
 
 case "${action}" in
 --get-supported)
-    echo $supported_distros | xargs -n1
+    getSupportedPackages   
     ;;
 --buildpkg)
+    #First determine if we are explicitly calling a release build
     package=$2
-    checkDistro $package
-    buildPackage $package
-    ;;
---buildprep)
-    package=$2
-    if [ -n "$3" -a "$3" != "--dryrun" ]; then
-        echo $3: unsupported option passed by ati-installer.sh
+    support_flag=false
+    for supported_list in `getSupportedPackages`
+    do
+        if [ "${supported_list}" = "${package}" ]
+        then
+            support_flag=true
+            break
+        fi
+    done
+    #If we haven't explicitly called, or failed to type something coherent
+    #automatically detect
+    if [ "${support_flag}" != "true" ]
+    then
+        package=$(cat /etc/version | cut -d. -f1)
+        for supported_list in `getSupportedPackages`
+        do
+            if [ "${supported_list}" = "${package}" ]
+            then
+                support_flag=true
+                echo "Automatically detected" ${package}
+                break
+            fi
+        done
+    fi
+    if [ "${support_flag}" = "true" ]
+    then
+        buildPackage ${package}
+    else
+        echo "Unable to build package for" ${package}
         exit 1
     fi
-    checkDistro $package
-    buildPrep $package $3
-    ;;
---installpkg)
-    package=$2
-    checkDistro $package
-    installPackage $package
-    ;;
---installprep)
-    package=$2
-    checkDistro $package
-    # All this is handled in --installpkg already.
     exit 0
-    ;;
---identify)
-    package=$2
-    if [ -f /etc/mandriva-release ] && [ "${package}" = "$(cut -d. -f1,2 /etc/version)" ]; then
-        exit 0
-    fi
-    exit ${ATI_INSTALLER_ERR_VERS}
-    ;;
---get-maintainer)
-    echo "Dmitry Mikhirev <dmikhirev@mandriva.org>"
-    exit 0
-    ;;
---getAPIVersion)
-    exit 2
     ;;
 *|--*)
     echo ${action}: unsupported option passed by ati-installer.sh

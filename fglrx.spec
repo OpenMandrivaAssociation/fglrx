@@ -45,12 +45,11 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-#define oversion	12-8
-%define oversion	%{iversion}
+%define oversion	12.10
 # Advertised version, for description:
-%define mversion	12.8
+%define mversion	12.10
 # driver version from ati-packager-helper.sh:
-%define iversion	8.982
+%define iversion	9.002
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
@@ -72,7 +71,7 @@
 %define drivername	fglrx
 %define xorg_version	pic
 # highest supported videodrv abi
-%define videodrv_abi	10
+%define videodrv_abi	13
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
@@ -91,31 +90,6 @@
 # radeonhd has greater chance of working due to it not using ID lists.
 # (main pcitable entries override our entries)
 %define ldetect_cards_name	ATI Radeon HD 5000 and later without free driver (vesa/fglrx)
-%endif
-
-%if %{mdkversion} <= 201100
-%define ldetect_cards_name	ATI Radeon HD 2000 and later (vesa/fglrx)
-%endif
-
-%if %{mdkversion} <= 201000
-%define ldetect_cards_name	ATI Radeon HD 2000 and later (radeonhd/fglrx)
-%endif
-
-%if %{mdkversion} <= 200900
-%define ati_extdir	%{xorg_libdir}/modules/extensions/%{drivername}
-# radeonhd/fglrx
-%define ldetect_cards_name      ATI Radeon X1300 and later
-%endif
-
-%if %{mdkversion} <= 200810
-%define bundle_qt	1
-# vesa/fglrx
-%define ldetect_cards_name      ATI Radeon HD 3200
-%endif
-
-%if %{mdkversion} <= 200800
-# vesa/fglrx
-%define ldetect_cards_name      ATI Radeon X1300 - X1950
 %endif
 
 %ifarch %ix86
@@ -405,8 +379,8 @@ cd common # ensure patches do not touch outside
 cd ..
 
 cat > README.install.urpmi <<EOF
-This driver is for ATI Radeon HD 2000 and newer cards.
-Reconfiguring is not necessary when upgrading from a previous Mandriva AMD
+This driver is for ATI Radeon HD 5000 and newer cards.
+Reconfiguring is not necessary when upgrading from a previous %{_vendor} AMD
 driver package.
 
 Use XFdrake to configure X to use the correct AMD driver. Any needed
@@ -415,13 +389,7 @@ packages will be automatically installed if not already present.
 2. Go to the Graphics Card list.
 3. Select your card (it is usually already autoselected).
 4. Answer any questions asked and then quit.
-%if %{mdkversion} <= 200810
-5. Run "readlink -f /etc/alternatives/gl_conf". If it says
-   "%{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file}", add the following lines into the
-   Files section of %{_sysconfdir}/X11/xorg.conf:
-          ModulePath "%{ati_extdir}"
-          ModulePath "%{xorg_libdir}/modules"
-%endif
+
 
 If you do not want to use XFdrake or it does not work correctly for
 you, see README.manual-setup for manual installation instructions.
@@ -447,33 +415,19 @@ installation in the file 'README.install.urpmi' in this directory.
 - Run "ldconfig" as root.
 EOF
 
-cat > README.8.600.upgrade.urpmi <<EOF
+cat > README.8.980.upgrade.urpmi <<EOF
 REMOVED GRAPHICS DRIVER SUPPORT NOTIFICATION:
-Versions 8.600 and later of AMD Proprietary Graphics driver (fglrx) only
-support Radeon HD 2000 (r600) or newer cards.
+Versions 8.980 and later of AMD Proprietary Graphics driver (fglrx) only
+support Radeon HD 5000 or newer cards.
 
 If you have an older Radeon card or are unsure, please reconfigure your
 driver:
 1. Run XFdrake as root or select Graphical server configuration in
-   Mandriva Control Center.
+   %{_vendor} Control Center.
 2. Go to the Graphics Card list.
 3. Select your card (it is usually already autoselected).
 4. Answer any questions asked and then quit.
 EOF
-
-%if %{mdkversion} <= 200810
-cat > README.8.532.upgrade.urpmi <<EOF
-IMPORTANT NOTE:
-Additional manual upgrade steps are needed in order to fully enable all
-features of this version of the proprietary AMD driver on this release
-of Mandriva Linux:
-Run "readlink -f /etc/alternatives/gl_conf". If it says
-"%{_sysconfdir}/ld.so.conf.d/GL/%{ld_so_conf_file}", add the following two lines in the Files section
-of %{_sysconfdir}/X11/xorg.conf:
-      ModulePath "%{ati_extdir}"
-      ModulePath "%{xorg_libdir}/modules"
-EOF
-%endif
 
 %build
 %if !%{amdbuild}
@@ -895,18 +849,10 @@ fi
 %endif
 
 %post -n %{drivername}-control-center
-%if %mdkversion < 200900
-%{update_menus}
-%endif
 %if %{mdkversion} >= 200800
 [ -d %{_datadir}/fglrx ] && rm -r %{_datadir}/fglrx
 [ -d %{_datadir}/fglrx-hd2000 ] && rm -r %{_datadir}/fglrx-hd2000
 true
-%endif
-
-%if %mdkversion < 200900
-%postun -n %{drivername}-control-center
-%{clean_menus}
 %endif
 
 %post -n %{drivername}-opencl
@@ -933,15 +879,12 @@ rm -rf %{buildroot}
 %files -n %{driverpkgname}
 %defattr(0644,root,root,0755)
 %doc README.install.urpmi README.manual-setup
-%doc README.8.600.upgrade.urpmi
+%doc README.8.980.upgrade.urpmi
 # the documentation files are grossly out of date; the configuration options
 # described in configure.html seem to be used by the driver, though, so it is
 # packaged, while the other html files are not:
 %doc common/usr/share/doc/fglrx/configure.html
 %doc common/usr/share/doc/fglrx/LICENSE.TXT
-%if %{mdkversion} <= 200810
-%doc README.8.532.upgrade.urpmi
-%endif
 
 %defattr(-,root,root)
 
