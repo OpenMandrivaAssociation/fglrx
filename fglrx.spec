@@ -45,11 +45,11 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	12.10
+%define oversion        12.11-beta
 # Advertised version, for description:
-%define mversion	12.10
+%define mversion        12.11
 # driver version from ati-packager-helper.sh:
-%define iversion	9.002
+%define iversion	9.01
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
