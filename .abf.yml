@@ -1,0 +1,7 @@
+sources:
+  "amd-driver-installer-8.982-x86.x86_64.run:"	9177b28b96294a462b40e0993b5424b0e6b2b711
+  "atieventsd.init:"	545869b509dd172f7b6647ded50d711dea003cf9
+  "ati-packager.sh:"	d89395f8f902fdbb5b9e9f1c732aa14a21591a6e
+  "fglrx.rpmlintrc:"	817cb1f48260b3b987e9d7db3903fce0a3722e7b
+  "generate-fglrx-spec-from-svn.sh:"	e3955a27178dc0933a765889c5fd50dcc1e1877d
+  "README_for_maintainers.txt:"	599bbf8b2db6c002f24d77722280f77966aa2a62
