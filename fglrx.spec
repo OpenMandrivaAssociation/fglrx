@@ -794,13 +794,6 @@ fi
 amdconfig --del-pcs-key=LDC,ReleaseVersion &>/dev/null || :
 amdconfig --del-pcs-key=LDC,Catalyst_Version &>/dev/null || :
 
-# Remove AMD Testin use only waterkmark
-
-for x in $(objdump -d /usr/lib/xorg/modules/drivers/fglrx_drv.so|awk '/call/&&/EnableLogo/{print "\\x"$2"\\x"$3"\\x"$4"\\x"$5"\\x"$6}'); do
-sed -i "s/$x/\x90\x90\x90\x90\x90/g" /usr/lib/xorg/modules/drivers/fglrx_drv.so
-done
-
-
 %if %{mdkversion} >= 200800
 %posttrans -n %{driverpkgname}
 # RPM seems to leave out the active /etc/fglrx* directory, likely due to
