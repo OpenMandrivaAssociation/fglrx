@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	9.01
 # release:
-%define rel		1
+%define rel		2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 %define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 %else
@@ -793,6 +793,13 @@ fi
 # (fixes version display in amdcccle after upgrade)
 amdconfig --del-pcs-key=LDC,ReleaseVersion &>/dev/null || :
 amdconfig --del-pcs-key=LDC,Catalyst_Version &>/dev/null || :
+
+# Remove AMD Testin use only waterkmark
+
+for x in $(objdump -d /usr/lib/xorg/modules/drivers/fglrx_drv.so|awk '/call/&&/EnableLogo/{print "\\x"$2"\\x"$3"\\x"$4"\\x"$5"\\x"$6}'); do
+sed -i "s/$x/\x90\x90\x90\x90\x90/g" /usr/lib/xorg/modules/drivers/fglrx_drv.so
+done
+
 
 %if %{mdkversion} >= 200800
 %posttrans -n %{driverpkgname}
