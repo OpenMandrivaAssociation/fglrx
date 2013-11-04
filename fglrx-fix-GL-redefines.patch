@@ -1,0 +1,33 @@
+
+Already defined in mesa
+
+Signed-off-by: Thomas Backlund <tmb@mageia.org>
+
+--- fglrx-13.200.16/common/usr/include/GL/glATI.h.orig	2013-10-04 18:15:41.000000000 +0300
++++ fglrx-13.200.16/common/usr/include/GL/glATI.h	2013-10-13 19:09:17.574448926 +0300
+@@ -5367,7 +5367,9 @@ typedef GLvoid (APIENTRY * PFNGLTEXRENDE
+ #define GL_SAMPLE_MASK_VALUE                               0x8E52
+ #define GL_MAX_SAMPLE_MASK_WORDS                           0x8E59
+ #define GL_TEXTURE_2D_MULTISAMPLE                          0x9100
++#ifndef GL_PROXY_TEXTURE_2D_MULTISAMPLE
+ #define GL_PROXY_TEXTURE_2D_MULTISAMPLE                    0X9101
++#endif
+ #define GL_TEXTURE_2D_MULTISAMPLE_ARRAY                    0x9102
+ #define GL_PROXY_TEXTURE_2D_MULTISAMPLE_ARRAY              0x9103
+ #define GL_MAX_COLOR_TEXTURE_SAMPLES                       0x910E
+@@ -6006,6 +6008,7 @@ typedef GLvoid (APIENTRY * PFNGLDEBUGMES
+ typedef GLvoid (APIENTRY * PFNGLDEBUGMESSAGECALLBACKARB)(GLvoid* callback, GLvoid* userParam);
+ typedef GLuint (APIENTRY * PFNGLGETDEBUGMESSAGELOGARB)(GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLenum* severities, GLsizei* lengths, GLchar* messageLog);
+ 
++#if 0
+ typedef void (APIENTRY *GLDEBUGPROCARB)(GLenum source,
+                                         GLenum type,
+                                         GLuint id,
+@@ -6014,6 +6017,7 @@ typedef void (APIENTRY *GLDEBUGPROCARB)(
+                                         const GLchar* message,
+                                         GLvoid* userParam);
+ // end ARB_debug_output
++#endif
+ 
+ 
+ /* ARB_debug_group (KHR_debug) */

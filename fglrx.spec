@@ -165,7 +165,7 @@ Release:	%{release}
 %if !%{ubuntu_prerelease}
 %if !%{opencl_prerelease}
 #Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-catalyst-%{oversion}-x86.x86_64.run
-Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-catalyst-%{oversion}-linux-x86.x86_64.run
+Source0:	http://www2.ati.com/drivers/linux/amd-catalyst-%{oversion}-linux-x86.x86_64.run
 %else
 Source0:	http://download2-developer.amd.com/amd/APPSDK/OpenCL1.2betadriversLinux.tgz
 %endif
@@ -188,6 +188,10 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
+# (tmb) fix GL mess
+Patch11:	fglrx-fix-GL-redefines.patch
+# (tmb) fix build with kernel 3.12
+Patch12:	fglrx-kernel-3.12.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -196,10 +200,9 @@ ExclusiveArch:	%{ix86} x86_64
 BuildRoot:	%{_tmppath}/%{name}-root
 %endif
 %if !%{amdbuild}
-BuildRequires:	mesagl-devel
+BuildRequires:	pkgconfig(gl)
 BuildRequires:	libxmu-devel
-BuildRequires:	libxaw-devel
-BuildRequires:	libxp-devel
+BuildRequires:	xaw-devel
 BuildRequires:	libxtst-devel
 BuildRequires:	imake
 # Used by atieventsd:
@@ -377,6 +380,8 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
+%patch11 -p2
+%patch12 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
@@ -710,6 +715,11 @@ chmod 0755 %{buildroot}%{_libdir}/fglrx/switchlibGL
 # dereferencing the symlink.
 cp -a %{buildroot}%{_libdir}/fglrx/switchlibGL %{buildroot}%{_libdir}/fglrx/switchlibglx
 
+# unneeded to-be-removed files as per AMD
+find %{buildroot} \( -name libSlotMaximizerAg.so -o -name libSlotMaximizerBe.so \) -print -delete
+# not installed by AMD and not referenced elsewhere:
+find %{buildroot} \( -name libamdsc64.so -o -name libamdsc32.so \) -print -delete
+
 # Fix file permissions
 find %{buildroot} -name '*.h' -exec %__chmod 0644 {} \;
 find %{buildroot} -name '*.c' -exec %__chmod 0644 {} \;
@@ -987,6 +997,8 @@ rm -rf %{buildroot}
 
 %config(noreplace) %{_sysconfdir}/ati/atiapfuser.blb
 %config(noreplace) %{_sysconfdir}/ati/atiapfxx.blb
+%{_sysconfdir}/ati/atiapfxx
+%{_sysconfdir}/ati/atiapfxx.log
 
 %{_mandir}/man8/atieventsd.8*
 
@@ -1040,11 +1052,9 @@ rm -rf %{buildroot}
 %{_bindir}/clinfo
 %{_libdir}/%{drivername}/libamdocl*.so
 %{_libdir}/%{drivername}/libOpenCL.so.1
-%{_libdir}/%{drivername}/libSlotMaximizer*.so
 %ifarch x86_64
 %{_prefix}/lib/%{drivername}/libamdocl*.so
 %{_prefix}/lib/%{drivername}/libOpenCL.so.1
-%{_prefix}/lib/%{drivername}/libSlotMaximizer*.so
 %endif
 
 %files -n dkms-%{drivername}
