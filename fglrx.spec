@@ -53,7 +53,9 @@
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
-%define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
+#define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
+# (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
+%define version		13.250.18
 %else
 # Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
