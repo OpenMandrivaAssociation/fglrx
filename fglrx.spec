@@ -45,11 +45,11 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion        13.1
+%define oversion        13.11-beta6
 # Advertised version, for description:
-%define mversion        13.1
+%define mversion        13.11-beta6
 # driver version from ati-packager-helper.sh:
-%define iversion	9.012
+%define iversion	13.25.18
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
@@ -60,7 +60,7 @@
 %endif
 
 %define priority	1000
-%define release %mkrel %{rel}
+%define release %{rel}
 
 # set to 1 for a prerelease driver with an ubuntu tarball as source
 %define ubuntu_prerelease 0
@@ -71,7 +71,7 @@
 %define drivername	fglrx
 %define xorg_version	pic
 # highest supported videodrv abi
-%define videodrv_abi	13
+%define videodrv_abi	14
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
