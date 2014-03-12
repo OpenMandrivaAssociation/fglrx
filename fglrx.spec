@@ -208,7 +208,7 @@ BuildRoot:	%{_tmppath}/%{name}-root
 %endif
 %if !%{amdbuild}
 BuildRequires:	pkgconfig(gl)
-BuildRequires:	pkgconfig(ap)
+BuildRequires:	pkgconfig(xp)
 BuildRequires:	pkgconfig(xmu)
 BuildRequires:	xaw-devel
 BuildRequires:	pkgconfig(xtst)
