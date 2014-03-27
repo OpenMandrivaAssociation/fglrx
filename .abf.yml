@@ -1,2 +1,5 @@
 sources:
-  amd-catalyst-13.11-beta6-linux-x86.x86_64.run: a99ca246ff3aea5b3daec22db1e9810c309bf538
+  amd-catalyst-13.12-linux-x86.x86_64.run: ef9762d6f900284fb964fc1cda7d78119076cda9
+  amd-catalyst-13.4-linux-x86.x86_64.run: 70e6e0970440c9c5fb9b7fdc8e9b9bf296a6367f
+  amd-catalyst-13.8-beta1-linux-x86.x86_64.run: cada6accc515a4a14aadde6d42a1efe79f95d995
+  amd-driver-installer-catalyst-13.1-linux-x86.x86_64.run: febbce7ae4d401c5f935b816cd8b5eacb12e0586
