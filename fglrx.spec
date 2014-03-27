@@ -45,17 +45,17 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion        13.11-beta6
+%define oversion        13.12
 # Advertised version, for description:
-%define mversion        13.11-beta6
+%define mversion        13.12
 # driver version from ati-packager-helper.sh:
-%define iversion	13.25.18
+%define iversion	13.251
 # release:
-%define rel		1
+%define rel		2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
-%define version		13.250.18
+%define version		13.251
 %else
 # Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
@@ -106,45 +106,26 @@
 # Other packages should not require any AMD specific proprietary libraries
 # (if that is really necessary, we may want to split that specific lib out),
 # and this package should not be pulled in when libGL.so.1 is required.
-%if %{_use_internal_dependency_generator}
-%define __noautoprov '\\.so'
-%else
-%define _provides_exceptions \\.so
-%endif
+%define __noautoprov 'libGL\\.so\\.1(.*)|devel\\(libGL(.*)|\\.so'
+
 
 %define qt_requires_exceptions %nil
 %if %{bundle_qt}
 # do not require Qt if it is bundled
-%if %{_use_internal_dependency_generator}
-%define qt_requires_exceptions |libQtCore\\.so|libQtGui\\.so
-%else
 %define qt_requires_exceptions \\|libQtCore\\.so\\|libQtGui\\.so
-%endif
 %endif
 
 # do not require fglrx stuff, they are all included
-%if %{_use_internal_dependency_generator}
-%define common_requires_exceptions libfglrx.+\\.so|libati.+\\.so|libOpenCL\\.so%{qt_requires_exceptions}
-%else
 %define common_requires_exceptions libfglrx.\\+\\.so\\|libati.\\+\\.so\\|libOpenCL\\.so%{qt_requires_exceptions}
-%endif
 
 %ifarch x86_64
 # (anssi) Allow installing of 64-bit package if the runtime dependencies
 # of 32-bit libraries are not satisfied. If a 32-bit package that requires
 # libGL.so.1 is installed, the 32-bit mesa libs are pulled in and that will
 # pull the dependencies of 32-bit fglrx libraries in as well.
-%if %{_use_internal_dependency_generator}
-%define __noautoreq '%{common_requires_exceptions}|lib.*so\\.[^(]+(\\([^)]+\\))?$'
+%define __noautoreq %common_requires_exceptions\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
 %else
-%define _requires_exceptions %{common_requires_exceptions}\\|lib.*so\\.[^(]\\+\\(([^)]\\+)\\)\\?$
-%endif
-%else
-%if %{_use_internal_dependency_generator}
-%define __noautoreq '%{common_requires_exceptions}'
-%else
-%define _requires_exceptions %{common_requires_exceptions}
-%endif
+%define __noautoreq %common_requires_exceptions
 %endif
 
 # (anssi) Do not require qt for amdnotifyui (used as event notifier, as
@@ -185,15 +166,20 @@ Source10:	generate-fglrx-spec-from-svn.sh
 Source11:	fglrx.rpmlintrc
 Source12:	README_for_maintainers.txt
 %endif
+
 Patch3:		fglrx-authfile-locations.patch
 Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
+# fix build with mesa > 9.2.x
+#Patch12:	ati-drivers-13.8-mesa-9.2-debug.patch
 # (tmb) fix GL mess
-Patch11:	fglrx-fix-GL-redefines.patch
-# (tmb) fix build with kernel 3.12
-Patch12:	fglrx-kernel-3.12.patch
+Patch13:	fglrx-fix-GL-redefines.patch
+# (tmb) fix build with 3.9+ again :(  (debian)
+Patch14:	fglrx-replace_acpi_table_handler.patch
+# (tmb) fix build with 3.12 again :(  (debian)
+Patch15:	fglrx-buildfix_kernel_3.12.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -203,9 +189,10 @@ BuildRoot:	%{_tmppath}/%{name}-root
 %endif
 %if !%{amdbuild}
 BuildRequires:	pkgconfig(gl)
-BuildRequires:	libxmu-devel
+BuildRequires:	pkgconfig(xp)
+BuildRequires:	pkgconfig(xmu)
 BuildRequires:	xaw-devel
-BuildRequires:	libxtst-devel
+BuildRequires:	pkgconfig(xtst)
 BuildRequires:	imake
 # Used by atieventsd:
 Suggests:	acpid
@@ -382,8 +369,10 @@ cd common # ensure patches do not touch outside
 %patch3 -p2
 %patch9 -p2
 %patch10 -p2
-%patch11 -p2
-%patch12 -p2
+#patch12 -p2
+%patch13 -p2
+%patch14 -p2
+%patch15 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
@@ -447,8 +436,6 @@ cd -
 %endif
 
 %install
-rm -rf %{buildroot}
-
 # dkms
 install -d -m755 %{buildroot}%{_usrsrc}/%{drivername}-%{version}-%{release}
 cp -a common/lib/modules/fglrx/build_mod/* %{buildroot}%{_usrsrc}/%{drivername}-%{version}-%{release}
@@ -888,9 +875,6 @@ rmmod fglrx > /dev/null 2>&1 || true
 
 # rmmod any old driver if present and not in use (e.g. by X)
 rmmod fglrx > /dev/null 2>&1 || true
-
-%clean
-rm -rf %{buildroot}
 
 %files -n %{driverpkgname}
 %defattr(0644,root,root,0755)
