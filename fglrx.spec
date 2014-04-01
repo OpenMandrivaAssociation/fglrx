@@ -45,17 +45,17 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion        13.12
+%define oversion        13.35.1005
 # Advertised version, for description:
-%define mversion        13.12
+%define mversion        14.3
 # driver version from ati-packager-helper.sh:
-%define iversion	13.251
+%define iversion	13.35.1005
 # release:
-%define rel		2
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
-%define version		13.251
+%define version		13.350.1005
 %else
 # Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
@@ -73,7 +73,7 @@
 %define drivername	fglrx
 %define xorg_version	pic
 # highest supported videodrv abi
-%define videodrv_abi	14
+%define videodrv_abi	15
 %define xorg_libdir	%{_libdir}/xorg
 %define xorg_dridir	%{_libdir}/dri
 %define xorg_dridir32	%{_prefix}/lib/dri
@@ -147,8 +147,8 @@ Release:	%{release}
 %if !%{amdbuild}
 %if !%{ubuntu_prerelease}
 %if !%{opencl_prerelease}
-#Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-catalyst-%{oversion}-x86.x86_64.run
-Source0:	http://www2.ati.com/drivers/linux/amd-catalyst-%{oversion}-linux-x86.x86_64.run
+Source0:	http://www2.ati.com/drivers/linux/amd-driver-installer-%{oversion}-x86.x86_64.run
+#Source0:	http://www2.ati.com/drivers/linux/amd-catalyst-%{oversion}-linux-x86.x86_64.run
 %else
 Source0:	http://download2-developer.amd.com/amd/APPSDK/OpenCL1.2betadriversLinux.tgz
 %endif
@@ -172,14 +172,8 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 # do not probe /proc for kernel info as we may be building for a
 # different kernel
 Patch10:	fglrx-make_sh-no-proc-probe.patch
-# fix build with mesa > 9.2.x
-#Patch12:	ati-drivers-13.8-mesa-9.2-debug.patch
 # (tmb) fix GL mess
 Patch13:	fglrx-fix-GL-redefines.patch
-# (tmb) fix build with 3.9+ again :(  (debian)
-Patch14:	fglrx-replace_acpi_table_handler.patch
-# (tmb) fix build with 3.12 again :(  (debian)
-Patch15:	fglrx-buildfix_kernel_3.12.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -371,8 +365,6 @@ cd common # ensure patches do not touch outside
 %patch10 -p2
 #patch12 -p2
 %patch13 -p2
-%patch14 -p2
-%patch15 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
@@ -911,7 +903,7 @@ rmmod fglrx > /dev/null 2>&1 || true
 %dir %{_sysconfdir}/ati
 %{_sysconfdir}/ati/control
 %{_sysconfdir}/ati/signature
-%config(noreplace) %{_sysconfdir}/ati/atiogl.xml
+#config(noreplace) %{_sysconfdir}/ati/atiogl.xml
 %{_sysconfdir}/ati/logo.xbm.example
 %{_sysconfdir}/ati/logo_mask.xbm.example
 %config %{_sysconfdir}/ati/authatieventsd.sh
