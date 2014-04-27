@@ -45,17 +45,17 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion        13.35.1005
+%define oversion        14.10.1006
 # Advertised version, for description:
-%define mversion        14.3
+%define mversion        14.4
 # driver version from ati-packager-helper.sh:
-%define iversion	13.35.1005
+%define iversion	14.10.1006
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
-%define version		13.350.1005
+%define version		14.100.1006
 %else
 # Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
