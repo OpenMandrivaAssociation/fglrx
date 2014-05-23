@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	14.10.1006
 # release:
-%define rel		1
+%define rel		2
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
@@ -174,6 +174,7 @@ Patch9:		fglrx-make_sh-custom-kernel-dir.patch
 Patch10:	fglrx-make_sh-no-proc-probe.patch
 # (tmb) fix GL mess
 Patch13:	fglrx-fix-GL-redefines.patch
+Patch14:	fglrx-14.100.1006-handle-make-jproc-flag.patch
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
@@ -365,6 +366,7 @@ cd common # ensure patches do not touch outside
 %patch10 -p2
 #patch12 -p2
 %patch13 -p2
+%patch14 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF

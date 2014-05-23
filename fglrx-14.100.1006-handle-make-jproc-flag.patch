@@ -1,0 +1,22 @@
+--- fglrx-14.100.1006/common/lib/modules/fglrx/build_mod/make.sh.parallel~	2014-05-23 13:35:18.897521236 +0200
++++ fglrx-14.100.1006/common/lib/modules/fglrx/build_mod/make.sh	2014-05-23 14:48:52.841905755 +0200
+@@ -143,6 +143,10 @@ while [ $# -gt 0 ]; do
+             no_proc_probe=1
+             shift
+             ;;
++	-j*)
++            makeprocflags=$1
++	    shift
++	    ;;
+     esac
+ done
+ 
+@@ -503,7 +507,7 @@ make clean
+ echo 'This is a dummy file created to suppress this warning: could not find /lib/modules/fglrx/build_mod/2.6.x/.libfglrx_ip.a.cmd for /lib/modules/fglrx/build_mod/2.6.x/libfglrx_ip.a' > .lib${MODULE}_ip.a.cmd
+ 
+ CFLAGS_MODULE="-DMODULE -DATI -DFGL -DPAGE_ATTR_FIX=$PAGE_ATTR_FIX -DCOMPAT_ALLOC_USER_SPACE=$COMPAT_ALLOC_USER_SPACE $def_smp $def_modversions"
+-make CC=${CC} \
++make $(makeprocflags)  CC=${CC} \
+     LIBIP_PREFIX=$(echo "$LIBIP_PREFIX" | sed -e 's|^\([^/]\)|../\1|') \
+     MODFLAGS="$CFLAGS_MODULE" \
+     CFLAGS_MODULE="$CFLAGS_MODULE" \
