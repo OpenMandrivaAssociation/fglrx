@@ -51,7 +51,7 @@
 # driver version from ati-packager-helper.sh:
 %define iversion	14.501.1003
 # release:
-%define rel		2
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
