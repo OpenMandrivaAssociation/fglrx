@@ -45,17 +45,17 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion        14.10.1006
+%define oversion	14.501.1003
 # Advertised version, for description:
-%define mversion        14.4
+%define mversion        14.12
 # driver version from ati-packager-helper.sh:
-%define iversion	14.10.1006
+%define iversion	14.501.1003
 # release:
-%define rel		2
+%define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
-%define version		14.100.1006
+%define version		14.501.1003
 %else
 # Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
@@ -952,8 +952,10 @@ rmmod fglrx > /dev/null 2>&1 || true
 %{_libdir}/%{drivername}/libaticaldd.so
 %{_libdir}/%{drivername}/libaticalrt.so
 %{_libdir}/%{drivername}/libatiuki.so.1*
+%{_prefix}/lib/%{drivername}/libamdhsasc32.so
 %ifarch x86_64
 %dir %{_prefix}/lib/%{drivername}
+%{_libdir}/%{drivername}/libamdhsasc64.so
 %{_prefix}/lib/%{drivername}/libGL.so.1
 %{_prefix}/lib/%{drivername}/libGL.so.1.*
 %{_prefix}/lib/%{drivername}/libaticalcl.so
@@ -988,6 +990,7 @@ rmmod fglrx > /dev/null 2>&1 || true
 %{_sysconfdir}/security/console.apps/amdcccle-su
 %{_sysconfdir}/pam.d/amdcccle-su
 %{_bindir}/amdcccle
+%{_bindir}/amd-console-helper
 %dir %{_datadir}/ati
 %dir %{_datadir}/ati/amdcccle
 %if %{amdbuild}
