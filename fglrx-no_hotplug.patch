@@ -1,0 +1,42 @@
+diff -Nurp 14.501.1003.orig/common/lib/modules/fglrx/build_mod/firegl_public.c 14.501.1003/common/lib/modules/fglrx/build_mod/firegl_public.c
+--- 14.501.1003.orig/common/lib/modules/fglrx/build_mod/firegl_public.c	2014-11-28 22:02:10.000000000 +0200
++++ 14.501.1003/common/lib/modules/fglrx/build_mod/firegl_public.c	2014-12-10 22:43:46.330727906 +0200
+@@ -1093,6 +1093,9 @@ static int fglrx_pci_suspend(struct pci_
+     // directly here to allow suspend/resume without X server start. 
+         firegl_pci_save_state((KCL_PCI_DevHandle)pdev, privdev);
+         pci_disable_device(pdev);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
++        pci_ignore_hotplug(pdev);
++#endif
+         PMSG_EVENT(pdev->dev.power.power_state) = state;
+     }
+     else
+diff -Nurp 14.501.1003.orig/common/lib/modules/fglrx/build_mod/kcl_acpi.c 14.501.1003/common/lib/modules/fglrx/build_mod/kcl_acpi.c
+--- 14.501.1003.orig/common/lib/modules/fglrx/build_mod/kcl_acpi.c	2014-11-28 22:02:10.000000000 +0200
++++ 14.501.1003/common/lib/modules/fglrx/build_mod/kcl_acpi.c	2014-12-10 22:43:57.966786784 +0200
+@@ -840,10 +840,12 @@ static acpi_status KCL_ACPI_Slot_No_Hotp
+    if(tdev != NULL)
+    {
+       device = (acpi_device_adr(tdev) >> 16) & 0xffff;
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
+       if(PCI_SLOT(pdev->devfn) == device)
+       {
+          tdev->flags.no_hotplug = true;
+       }
++#endif
+    }
+ #endif
+    return 0;
+diff -Nurp 14.501.1003.orig/common/lib/modules/fglrx/build_mod/kcl_pci.c 14.501.1003/common/lib/modules/fglrx/build_mod/kcl_pci.c
+--- 14.501.1003.orig/common/lib/modules/fglrx/build_mod/kcl_pci.c	2014-11-28 22:02:10.000000000 +0200
++++ 14.501.1003/common/lib/modules/fglrx/build_mod/kcl_pci.c	2014-12-10 22:44:10.076848102 +0200
+@@ -306,6 +306,9 @@ void ATI_API_CALL KCL_PCI_DisableDevice(
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+     pci_disable_device((struct pci_dev*)dev);
+ #endif
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
++    pci_ignore_hotplug((struct pci_dev*)dev);
++#endif
+ }
+ 
+ #if defined(__x86_64__)
