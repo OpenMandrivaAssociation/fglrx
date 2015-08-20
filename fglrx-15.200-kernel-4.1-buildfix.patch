@@ -1,0 +1,87 @@
+
+Fix build with kernel 4.1
+
+Signed-off-by: Thomas Backlund <tmb@mageia.org>
+
+diff -Nurp 15.200.orig/common/lib/modules/fglrx/build_mod/firegl_public.c 15.200/common/lib/modules/fglrx/build_mod/firegl_public.c
+--- 15.200.orig/common/lib/modules/fglrx/build_mod/firegl_public.c	2015-07-04 17:31:23.000000000 +0300
++++ 15.200/common/lib/modules/fglrx/build_mod/firegl_public.c	2015-07-09 14:17:47.615126024 +0300
+@@ -3498,7 +3498,11 @@ int ATI_API_CALL KCL_InstallInterruptHan
+ #else
+         //when MSI enabled. keep irq disabled when calling the action handler,
+         //exclude this IRQ from irq balancing (only on one CPU) 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+         ((useMSI) ? (IRQF_DISABLED) : (IRQF_SHARED)),    
++#else
++        ((useMSI) ? (IRQF_NOBALANCING) : (IRQF_SHARED)),
++#endif
+ #endif
+         dev_name,
+         context);
+@@ -4498,8 +4502,13 @@ static void kcl_mem_pat_setup (void *inf
+ 
+     if (cpu_has_pge)
+     {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+         cr4 = read_cr4();
+         write_cr4(cr4 & ~X86_CR4_PGE);
++#else
++        cr4 = __read_cr4();
++        __write_cr4(cr4 & ~X86_CR4_PGE);
++#endif
+     }
+      __flush_tlb();
+ 
+@@ -4512,7 +4521,11 @@ static void kcl_mem_pat_setup (void *inf
+     write_cr0(cr0 & 0xbfffffff);
+     if (cpu_has_pge)
+     {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+         write_cr4(cr4);
++#else
++        __write_cr4(cr4);
++#endif
+     }
+     local_irq_restore(flags);
+ 
+@@ -4539,8 +4552,13 @@ static void kcl_mem_pat_restore (void *i
+ 
+     if (cpu_has_pge)
+     {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+         cr4 = read_cr4();
+         write_cr4(cr4 & ~X86_CR4_PGE);
++#else
++        cr4 = __read_cr4();
++        __write_cr4(cr4 & ~X86_CR4_PGE);
++#endif
+     }
+      __flush_tlb();
+   
+@@ -4552,7 +4570,11 @@ static void kcl_mem_pat_restore (void *i
+     write_cr0(cr0 & 0xbfffffff);
+     if (cpu_has_pge)
+     {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+         write_cr4(cr4);
++#else
++        __write_cr4(cr4);
++#endif
+     }
+     local_irq_restore(flags);
+ 
+diff -Nurp 15.200.orig/common/lib/modules/fglrx/build_mod/kcl_str.c 15.200/common/lib/modules/fglrx/build_mod/kcl_str.c
+--- 15.200.orig/common/lib/modules/fglrx/build_mod/kcl_str.c	2015-07-04 17:31:23.000000000 +0300
++++ 15.200/common/lib/modules/fglrx/build_mod/kcl_str.c	2015-07-09 14:15:15.097939644 +0300
+@@ -169,7 +169,11 @@ int ATI_API_CALL KCL_STR_Strnicmp(const
+                                   const char* s2,
+                                   KCL_TYPE_SizeSigned count)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
+     return strnicmp(s1, s2, count);
++#else
++    return strncasecmp(s1, s2, count);
++#endif
+ }
+ 
+ /** \brief Locate character in string
