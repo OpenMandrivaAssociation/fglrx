@@ -45,17 +45,17 @@
 # When updating, please add new ids to ldetect-lst (merge2pcitable.pl).
 
 # version in installer filename:
-%define oversion	14.501.1003
+%define oversion	15.20.1046
 # Advertised version, for description:
-%define mversion        14.12
+%define mversion        15.7
 # driver version from ati-packager-helper.sh:
-%define iversion	14.501.1003
+%define iversion	15.20.1046
 # release:
 %define rel		1
 # rpm version (adds 0 in order to not go backwards if iversion is two-decimal)
 #define version		%{iversion}%([ $(echo %iversion | wc -c) -le 5 ] && echo 0)
 # (tmb) amd keeps playing up/down with the versioning, so lets do manual added 0 "fix" for now
-%define version		14.501.1003
+%define version		15.200.1046
 %else
 # Best-effort if AMD has made late changes (in amdbuild mode)
 %define _default_patch_fuzz 2
@@ -175,9 +175,9 @@ Patch10:	fglrx-make_sh-no-proc-probe.patch
 # (tmb) fix GL mess
 Patch13:	fglrx-fix-GL-redefines.patch
 Patch14:	fglrx-14.100.1006-handle-make-jproc-flag.patch
-# cb - patches from mageia for later kernels
-Patch15:	fglrx-no_hotplug.patch
-Patch16:	fglrx-fix-build-with-kernel-3.19.patch
+Patch15:	fglrx-15.200-kernel-4.1-buildfix.patch
+Patch16:	fglrx-15.200.1046-kernel-4.1.3-buildfix.patch
+Patch17:	fglrx-15.200.1046-ignore-GCC-version.patch
 
 License:	Freeware
 URL:		http://ati.amd.com/support/driver.html
@@ -373,6 +373,7 @@ cd common # ensure patches do not touch outside
 %patch14 -p2
 %patch15 -p2
 %patch16 -p2
+%patch17 -p2
 cd ..
 
 cat > README.install.urpmi <<EOF
@@ -958,10 +959,8 @@ rmmod fglrx > /dev/null 2>&1 || true
 %{_libdir}/%{drivername}/libaticaldd.so
 %{_libdir}/%{drivername}/libaticalrt.so
 %{_libdir}/%{drivername}/libatiuki.so.1*
-%{_prefix}/lib/%{drivername}/libamdhsasc32.so
 %ifarch x86_64
 %dir %{_prefix}/lib/%{drivername}
-%{_libdir}/%{drivername}/libamdhsasc64.so
 %{_prefix}/lib/%{drivername}/libGL.so.1
 %{_prefix}/lib/%{drivername}/libGL.so.1.*
 %{_prefix}/lib/%{drivername}/libaticalcl.so

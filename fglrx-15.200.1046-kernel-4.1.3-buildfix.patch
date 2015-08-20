@@ -1,0 +1,38 @@
+
+Upstream -stable commit:
+
+---
+From 0824965140fff1bf640a987dc790d1594a8e0699 Mon Sep 17 00:00:00 2001
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Date: Mon, 13 Apr 2015 16:23:36 +0200
+Subject: PCI: Propagate the "ignore hotplug" setting to parent
+
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+
+commit 0824965140fff1bf640a987dc790d1594a8e0699 upstream.
+---
+
+that landed in 4.1.3 turned pci_ignore_hotplug() into EXPORT_SYMBOL_GPL
+wich fglrx is not allowed to use, so open-code the ignore_hotplug call.
+
+Any parent bridge hotplug notification management like the new
+pci_ignore_hotplug() is doing does not happend here, this only brings
+us back to pre 4.1.3 mode.
+
+Signed-off-by: Thomas Backlund <tmb@mageia.org>
+
+diff -Nurp fglrx-15.200.1046.orig/common/lib/modules/fglrx/build_mod/kcl_acpi.c fglrx-15.200.1046/common/lib/modules/fglrx/build_mod/kcl_acpi.c
+--- fglrx-15.200.1046.orig/common/lib/modules/fglrx/build_mod/kcl_acpi.c	2015-07-04 17:31:23.000000000 +0300
++++ fglrx-15.200.1046/common/lib/modules/fglrx/build_mod/kcl_acpi.c	2015-07-23 18:27:13.095314661 +0300
+@@ -861,7 +861,11 @@ void ATI_API_CALL KCL_ACPI_No_Hotplug(vo
+ #elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0)
+     if(pdev)
+     {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 3)
++       pdev->ignore_hotplug = 1;
++#else
+        pci_ignore_hotplug(pdev);
++#endif
+     }
+ #endif
+ }
