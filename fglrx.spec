@@ -180,7 +180,7 @@ Patch16:	fglrx-15.200.1046-kernel-4.1.3-buildfix.patch
 Patch17:	fglrx-15.200.1046-ignore-GCC-version.patch
 
 License:	Freeware
-URL:		http://ati.amd.com/support/driver.html
+URL:		https://ati.amd.com/support/driver.html
 Group:		System/Kernel and hardware
 ExclusiveArch:	%{ix86} x86_64
 %if %{mdvver} <= 201010
